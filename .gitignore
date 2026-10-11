@@ -1,0 +1,45 @@
+# Visual Studio and .NET
+**/[Bb]in/
+**/[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+[Tt]est[Rr]esults/
+[Aa]rtifacts/
+*.nupkg
+*.snupkg
+
+# Local secrets and credentials (never commit real values)
+.env
+.env.*
+!.env.example
+!.env.sample
+secrets.json
+secrets.*.json
+appsettings.Local.json
+appsettings.*.Local.json
+appsettings.*.local.json
+*.pfx
+*.p12
+*.pem
+*.key
+*.publishsettings
+*.pubxml
+.aws/
+credentials.json
+credentials.*.json
+
+# Temporary files and logs
+*.tmp
+*.temp
+*.bak
+*.log
+*.swp
+*.swo
+~$*
+[Dd]esktop.ini
+[Tt]humbs.db
+.DS_Store

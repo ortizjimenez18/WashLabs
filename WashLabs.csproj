@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The web project lives at the repository root; sibling layers own their files. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);WashLabs.Data/**;WashLabs.Models/**;WashLabs.Services/**;WashLabs/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="WashLabs.Services\WashLabs.Services.csproj" />
+    <ProjectReference Include="WashLabs.Models\WashLabs.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
+    <Folder Include="Mappers\" />
+  </ItemGroup>
+
+</Project>
