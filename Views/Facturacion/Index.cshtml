@@ -1,0 +1,24 @@
+@model IReadOnlyList<WashLabs.Models.DTOs.FacturaResumenDTO>
+@{ ViewData["Title"] = "Facturación"; var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR"); }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / HISTORIAL</p><h1>Facturación</h1><p class="lede">Comprobantes ordenados del más reciente al más antiguo.</p></section>
+<section class="shell history-section" aria-label="Historial de facturas">
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state"><h2>No hay facturas registradas.</h2><p>Las facturas aparecerán aquí cuando estén disponibles.</p></div>
+    }
+    else
+    {
+        <div class="record-list">
+            @foreach (var factura in Model)
+            {
+                <article class="record-card">
+                    <dl><dt>Factura</dt><dd>#@factura.FacturaId</dd></dl>
+                    <dl><dt>Cliente</dt><dd>@factura.Cliente</dd></dl>
+                    <dl><dt>Fecha</dt><dd><time datetime="@factura.Fecha.ToString("s")">@factura.Fecha.ToString("dd/MM/yyyy HH:mm")</time></dd></dl>
+                    <dl><dt>Total</dt><dd>₡ @factura.Total.ToString("N2", culture)</dd></dl>
+                    <a class="record-link" asp-action="Detalle" asp-route-id="@factura.FacturaId" aria-label="Ver factura @factura.FacturaId">Ver detalle </a>
+                </article>
+            }
+        </div>
+    }
+</section>

@@ -1,0 +1,8 @@
+@{ ViewData["Title"] ??= "Página no encontrada"; }
+<section class="shell detail-section">
+    <div class="empty-state">
+        <h1>@ViewData["Title"]</h1>
+        <p>@(ViewData["Mensaje"] ?? "La página solicitada no existe o el registro no está disponible.")</p>
+        <a class="button" asp-controller="Home" asp-action="Index">Volver al inicio</a>
+    </div>
+</section>

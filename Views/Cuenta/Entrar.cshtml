@@ -1,0 +1,20 @@
+﻿@model WashLabs.ViewModels.EntrarViewModel
+@{ ViewData["Title"] = "Iniciar sesión"; }
+<section class="shell signin-page">
+    <div class="signin-card">
+        <div class="signin-brand"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /></div>
+        <div class="signin-content">
+            <h1>Iniciar sesión</h1>
+            <p class="signin-description">Bienvenido a tu cuenta WashLabs.</p>
+            <form method="post" asp-action="Entrar" class="account-form">
+                <div asp-validation-summary="All" class="validation-errors" role="alert"></div>
+                <input asp-for="ReturnUrl" type="hidden" />
+                <div><label asp-for="Correo">Correo electrónico</label><input asp-for="Correo" type="email" autocomplete="username" maxlength="150" required /></div>
+                <div><label asp-for="Clave">Contraseña</label><div class="password-field"><input asp-for="Clave" type="password" autocomplete="current-password" maxlength="128" required /><button type="button" data-toggle-password="Clave" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button></div></div>
+                <label class="remember-me"><input asp-for="Recordarme" /> Mantener mi sesión</label>
+                <button class="button" type="submit">Iniciar sesión</button>
+            </form>
+            <div class="signin-register"><span>¿No tienes una cuenta?</span><a class="text-link" asp-action="Registrarse">Crear cuenta</a></div>
+        </div>
+    </div>
+</section>

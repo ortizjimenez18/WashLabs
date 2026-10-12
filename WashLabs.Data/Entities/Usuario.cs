@@ -13,13 +13,15 @@ public partial class Usuario
 
     public string NombreCompleto { get; set; } = null!;
 
+    public string? Identificacion { get; set; }
+
     public string Telefono { get; set; } = null!;
 
     public string Correo { get; set; } = null!;
 
     public string Direccion { get; set; } = null!;
 
-    public DateOnly FechaNacimiento { get; set; }
+    public DateOnly? FechaNacimiento { get; set; }
 
     public string PasswordHash { get; set; } = null!;
 

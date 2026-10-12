@@ -1,8 +1,30 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model WashLabs.Models.DTOs.InicioDTO
+@{ ViewData["Title"] = "Inicio"; var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR"); }
+<section class="home-hero">
+    <div class="shell home-intro">
+        <div class="hero-copy"><p class="eyebrow">AUTOLAVADO Y DETALLADO AUTOMOTRIZ</p><h1>El cuidado<br />que tu vehículo<br /><span>merece.</span></h1>@if (Model.Negocio is not null) { <p class="lede">@Model.Negocio.Descripcion</p> }<div class="hero-actions"><a class="button" href="#servicios">Descubrir servicios </a><a class="hero-catalog-link" asp-controller="Productos" asp-action="Index">Explorar catálogo </a></div></div>
+        <div class="hero-brand"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /><a class="hero-loyalty-link" asp-controller="WashPoints" asp-action="Index"><span>Tu próxima visita también cuenta.</span><strong>Conoce WashPoints </strong></a></div>
+    </div>
+    <div class="hero-bottom shell"><a href="#servicios">Explora nuestros servicios </a></div>
+</section>
+@if (Model.Servicios.Count > 0)
+{
+    <section id="servicios" class="shell experience-section services-section"><div class="section-heading"><div><p class="eyebrow">SERVICIOS WASHLABS</p><h2>Una atención a la medida<br />de tu vehículo.</h2></div><div class="rail-controls"><button type="button" data-rail="service-rail" data-direction="-1" aria-label="Ver servicios anteriores">Anterior</button><button type="button" data-rail="service-rail" data-direction="1" aria-label="Ver más servicios">Siguiente</button></div></div>
+    <div id="service-rail" class="service-rail" tabindex="0" aria-label="Servicios disponibles">
+        @foreach (var servicio in Model.Servicios)
+        {
+            <article class="experience-service"><span class="service-duration">@servicio.DuracionMinutos min</span><h3>@servicio.Nombre</h3><p>@servicio.Descripcion</p><div class="service-bottom"><span>Desde</span><strong>₡ @servicio.TarifaBase.ToString("N2", culture)</strong></div><a class="service-reservation" asp-controller="Reservas" asp-action="Crear" asp-route-servicioId="@servicio.ServicioId">Reservar servicio</a></article>
+        }
+    </div></section>
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="loyalty-feature"><div class="shell loyalty-feature-inner"><div><p class="eyebrow">WASHPOINTS</p><h2>Cada lavado cuenta.<br /><span>Tu matrícula lleva el progreso.</span></h2><p>Consulta tu tarjeta y los lavados que faltan para llegar a la meta de 10.</p><a class="button" asp-controller="WashPoints" asp-action="Index">Ver mi tarjeta </a></div><nav class="account-links" aria-label="Consultas de WashLabs"><a asp-controller="Vehiculos" asp-action="Index"><span>Vehículos</span><strong>Matrículas registradas</strong></a><a asp-controller="Facturacion" asp-action="Index"><span>Facturación</span><strong>Tus comprobantes</strong></a><a asp-controller="Reservas" asp-action="Index"><span>Reservas</span><strong>Fechas y servicios</strong></a></nav></div></section>
+@if (Model.Productos.Count > 0)
+{
+    <section class="shell experience-section"><div class="section-heading"><div><p class="eyebrow">CUIDADO AUTOMOTRIZ</p><h2>El detalle continúa en casa.</h2></div><a class="catalog-link" asp-controller="Productos" asp-action="Index">Ver todos los productos </a></div><div class="product-grid">@foreach (var producto in Model.Productos) { <partial name="_ProductoCard" model="producto" /> }</div></section>
+}
+@if (Model.Sucursales.Count > 0)
+{
+    <section id="sucursales" class="shell experience-section branches-section"><div class="section-heading"><div><p class="eyebrow">VISÍTANOS</p><h2>Encuentra tu WashLabs.</h2></div></div><div class="branch-grid">
+    @foreach (var sucursal in Model.Sucursales) { <article class="branch-card"><h3>@sucursal.Nombre</h3>@if (!string.IsNullOrWhiteSpace(sucursal.Direccion)) { <p>@sucursal.Direccion</p> }<dl class="branch-contact">@if (!string.IsNullOrWhiteSpace(sucursal.Telefono)) { <div><dt>Teléfono</dt><dd><a href="tel:@sucursal.Telefono">@sucursal.Telefono</a></dd></div> }@if (!string.IsNullOrWhiteSpace(sucursal.Correo)) { <div><dt>Correo</dt><dd><a href="mailto:@sucursal.Correo">@sucursal.Correo</a></dd></div> }</dl></article> }
+    </div></section>
+}

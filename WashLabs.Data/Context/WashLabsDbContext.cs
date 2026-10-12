@@ -617,6 +617,7 @@ public partial class WashLabsDbContext : DbContext
             entity.Property(e => e.Marca).HasMaxLength(80);
             entity.Property(e => e.Nombre).HasMaxLength(120);
             entity.Property(e => e.Precio).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ImagenUrl).HasMaxLength(500);
             entity.Property(e => e.Presentacion).HasMaxLength(100);
             entity.Property(e => e.SKU)
                 .HasMaxLength(50)
@@ -808,14 +809,15 @@ public partial class WashLabsDbContext : DbContext
                 .HasPrecision(0)
                 .HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.NombreCompleto).HasMaxLength(150);
+            entity.Property(e => e.Identificacion).HasMaxLength(30).IsUnicode(false);
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
             entity.Property(e => e.RolId).HasDefaultValue((byte)1);
             entity.Property(e => e.Telefono)
                 .HasMaxLength(25)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.Rol).WithOne(p => p.Usuarios)
-                .HasForeignKey<Usuario>(d => d.RolId)
+            entity.HasOne(d => d.Rol).WithMany(p => p.Usuarios)
+                .HasForeignKey(d => d.RolId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Usuarios_Roles");
 

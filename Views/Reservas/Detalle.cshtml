@@ -1,0 +1,33 @@
+@model WashLabs.Models.DTOs.ReservaDTO
+@{ ViewData["Title"] = $"Reserva #{Model.CitaId}"; var vehiculos = ViewData["Vehiculos"] as IReadOnlyList<WashLabs.Models.DTOs.VehiculoDTO> ?? Array.Empty<WashLabs.Models.DTOs.VehiculoDTO>(); }
+<section class="shell detail-section">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación"><a asp-controller="Home" asp-action="Index">Inicio</a><span>/</span><a asp-action="Index">Reservas</a><span>/</span><span>Reserva #@Model.CitaId</span></nav>
+    <div class="document-heading"><h1>Reserva #@Model.CitaId</h1><partial name="_EstadoReserva" model="Model.Estado" /></div>
+    @if (TempData["Mensaje"] is string mensaje) { <p class="notice" role="status">@mensaje</p> }
+    <div class="document-panel">
+        <div class="document-meta">
+            <div><h2>Horario de la reserva</h2><p><span class="meta-label">Fecha</span> @Model.Fecha.ToString("dd/MM/yyyy")</p><p><span class="meta-label">Horario</span> @Model.HoraInicio.ToString("HH:mm") – @Model.HoraFin.ToString("HH:mm")</p><p><span class="meta-label">Creada el</span> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p></div>
+            <div><h2>Sucursal y servicio</h2><p><span class="meta-label">Sucursal</span> @Model.Sucursal</p><p><span class="meta-label">Servicio</span> @Model.Servicio</p></div>
+        </div>
+        <h2 class="subheading">Información para el servicio</h2>
+        <p><span class="meta-label">Matrícula del vehículo</span> @Model.Matricula</p>
+        @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
+        {
+            <form method="post" asp-action="AsignarVehiculo" asp-route-id="@Model.CitaId" class="vehicle-assignment">
+                <div><label for="vehiculoId">Vehículo del cliente</label><select id="vehiculoId" name="vehiculoId" required>@foreach (var vehiculo in vehiculos) { <option value="@vehiculo.VehiculoId" selected="@(vehiculo.Matricula == Model.Matricula)">@vehiculo.Matricula · @vehiculo.Marca @vehiculo.Modelo</option> }</select></div>
+                <button class="button" type="submit">Guardar vehículo</button>
+            </form>
+        }
+        <dl class="question-list">
+            @foreach (var respuesta in Model.Respuestas) { <div><dt>@respuesta.Pregunta</dt><dd>@respuesta.Respuesta</dd></div> }
+        </dl>
+        @if (Model.Respuestas.Count == 0) { <p class="muted">Esta reserva no tiene respuestas registradas.</p> }
+    </div>
+    <div class="detail-actions"><a class="button" asp-action="Index"> Volver al historial</a></div>
+    @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
+    {
+        <form method="post" asp-action="Completar" asp-route-id="@Model.CitaId" class="completion-form">
+            <button class="button" type="submit">Completar servicio</button>
+        </form>
+    }
+</section>

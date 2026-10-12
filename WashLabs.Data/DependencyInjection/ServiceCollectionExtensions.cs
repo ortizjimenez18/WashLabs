@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WashLabs.Data.Context;
+using WashLabs.Data.Interfaces;
+using WashLabs.Data.Repositories;
 
 namespace WashLabs.Data.DependencyInjection;
 
@@ -20,6 +22,12 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<WashLabsDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.UseCompatibilityLevel(150)));
+        services.AddScoped<IProductoRepository, ProductoRepository>();
+        services.AddScoped<IInicioRepository, InicioRepository>();
+        services.AddScoped<IFacturaRepository, FacturaRepository>();
+        services.AddScoped<IReservaRepository, ReservaRepository>();
+        services.AddScoped<IOperacionRepository, OperacionRepository>();
+        services.AddScoped<ICuentaRepository, CuentaRepository>();
 
         return services;
     }

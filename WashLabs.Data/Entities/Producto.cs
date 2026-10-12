@@ -21,6 +21,8 @@ public partial class Producto
 
     public string? SKU { get; set; }
 
+    public string? ImagenUrl { get; set; }
+
     public bool EsPersonalizable { get; set; }
 
     public bool Activo { get; set; }

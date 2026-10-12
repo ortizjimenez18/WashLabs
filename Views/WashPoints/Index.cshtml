@@ -1,0 +1,27 @@
+﻿@model WashLabs.ViewModels.WashPointsIndexViewModel
+@{ ViewData["Title"] = "WashPoints"; }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / FIDELIZACIÓN</p><h1>Tarjeta WashPoints</h1><p class="lede">El progreso de cada vehículo, identificado por su matrícula.</p></section>
+<section class="shell history-section">
+    <form method="get" asp-action="Index" class="filters points-filter"><div><label for="clienteId">Cliente</label><select id="clienteId" name="clienteId" required><option value="">Selecciona un cliente</option>@foreach (var cliente in Model.Clientes) { <option value="@cliente.ClienteId" selected="@(Model.ClienteId == cliente.ClienteId)">@cliente.Nombre</option> }</select></div><button class="button" type="submit">Consultar tarjetas</button></form>
+    @if (!Model.ClienteId.HasValue) { <p class="muted selection-hint">Selecciona un cliente para consultar las tarjetas de sus vehículos.</p> }
+    else if (Model.Puntos.Count == 0) { <div class="empty-state"><h2>Este cliente no tiene vehículos registrados.</h2><a class="button" asp-controller="Vehiculos" asp-action="Crear">Registrar vehículo</a></div> }
+    <div class="loyalty-cards">
+    @foreach (var puntos in Model.Puntos)
+    {
+        var faltantes = Math.Max(0, puntos.Meta - puntos.Lavados);
+        <article class="loyalty-card">
+            <header class="loyalty-card-header"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /><span>WASHPOINTS</span></header>
+            <div class="loyalty-card-body"><p class="eyebrow">@puntos.Vehiculo.Cliente</p><div class="loyalty-identity"><div><span class="meta-label">Matrícula</span><h2>@puntos.Vehiculo.Matricula</h2><p class="muted">@puntos.Vehiculo.Marca @puntos.Vehiculo.Modelo</p></div><div class="points-total"><strong>@puntos.Lavados <span>/ @puntos.Meta</span></strong><span>lavados acumulados</span></div></div>
+                <div class="wash-stamps" role="img" aria-label="@puntos.Lavados de @puntos.Meta lavados">
+                @for (var i = 1; i <= puntos.Meta; i++) { <span class="wash-stamp @(i <= puntos.Lavados ? "earned" : "")" aria-hidden="true">@(i <= puntos.Lavados ? "✓" : "")</span> }
+                </div>
+                <p class="loyalty-remaining">@(faltantes > 0 ? $"Faltan {faltantes} lavados para obtener la recompensa." : "Has alcanzado la meta de lavados.")</p>
+                <details><summary>Registro de lavados</summary>
+                @if (puntos.Movimientos.Count == 0) { <p class="muted">Este vehículo aún no tiene lavados completados.</p> }
+                else { <ul class="wash-history">@foreach (var movimiento in puntos.Movimientos) { <li><time datetime="@movimiento.Fecha.ToString("s")">@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</time><span>Cita #@movimiento.CitaId</span><strong>+@movimiento.Cantidad</strong></li> }</ul> }
+                </details>
+            </div>
+        </article>
+    }
+    </div>
+</section>

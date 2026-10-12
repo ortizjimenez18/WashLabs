@@ -1,0 +1,25 @@
+@model WashLabs.Models.DTOs.FacturaDTO
+@{ ViewData["Title"] = $"Factura #{Model.FacturaId}"; var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR"); }
+<section class="shell detail-section">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación"><a asp-controller="Home" asp-action="Index">Inicio</a><span>/</span><a asp-action="Index">Facturación</a><span>/</span><span>Factura #@Model.FacturaId</span></nav>
+    <div class="document-heading"><h1>Factura #@Model.FacturaId</h1><span class="muted">@Model.Estado</span></div>
+    <div class="document-panel">
+        <div class="document-meta">
+            <div><h2>Datos del comprobante</h2><p><span class="meta-label">Fecha</span> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p><p><span class="meta-label">Cliente</span> @Model.Cliente</p><p><span class="meta-label">Identificación</span> @(Model.IdentificacionCliente ?? "No registrada")</p></div>
+            <div><h2>@Model.Sucursal.Nombre</h2><p><span class="meta-label">Teléfono</span> @Model.Sucursal.Telefono</p><p><span class="meta-label">Dirección</span> @Model.Sucursal.Direccion</p><p><span class="meta-label">Correo</span> @Model.Sucursal.Correo</p></div>
+        </div>
+        <div class="table-wrap" role="region" aria-label="Líneas de la factura" tabindex="0">
+            <table class="invoice-lines"><caption>Productos y servicios</caption><thead><tr><th scope="col">Descripción</th><th scope="col" class="numeric">Precio unitario</th><th scope="col" class="numeric">Cantidad</th><th scope="col" class="numeric">Subtotal</th></tr></thead><tbody>
+                @foreach (var linea in Model.Lineas)
+                {
+                    <tr><td>@linea.Descripcion<span class="line-type">@linea.Tipo</span>@if (linea.Descuento > 0) { <span class="line-type">Descuento: ₡ @linea.Descuento.ToString("N2", culture)</span> }</td><td class="numeric">₡ @linea.PrecioUnitario.ToString("N2", culture)</td><td class="numeric">@linea.Cantidad.ToString("0.##", culture)</td><td class="numeric">₡ @linea.Subtotal.ToString("N2", culture)</td></tr>
+                }
+            </tbody></table>
+        </div>
+        <dl class="totals"><div><dt>Subtotal</dt><dd>₡ @Model.Subtotal.ToString("N2", culture)</dd></div>
+            @foreach (var impuesto in Model.Impuestos) { <div><dt>IVA (@impuesto.Porcentaje.ToString("0.##", culture)%)</dt><dd>₡ @impuesto.Monto.ToString("N2", culture)</dd></div> }
+            <div class="grand-total"><dt>Total</dt><dd>₡ @Model.Total.ToString("N2", culture)</dd></div>
+        </dl>
+    </div>
+    <div class="detail-actions"><a class="button" asp-action="Index"> Volver al historial</a></div>
+</section>
