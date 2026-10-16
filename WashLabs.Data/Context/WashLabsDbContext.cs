@@ -136,13 +136,7 @@ public partial class WashLabsDbContext : DbContext
             entity.ToTable("Citas", "dbo");
             entity.HasKey(e => e.CitaId).HasName("PK_Citas");
 
-            entity.ToTable(tb =>
-                {
-                    tb.HasTrigger("TR_Citas_CrearProforma");
-                    tb.HasTrigger("TR_Citas_HistorialEstado");
-                    tb.HasTrigger("TR_Citas_ValidarAgenda");
-                    tb.HasTrigger("TR_Citas_WashPoints");
-                });
+            entity.ToTable(tb => tb.UseSqlOutputClause(false));
 
             entity.HasIndex(e => new { e.SucursalId, e.Fecha, e.HoraInicio, e.HoraFin, e.EstadoCitaId }, "IX_Citas_Agenda");
 
@@ -259,7 +253,7 @@ public partial class WashLabsDbContext : DbContext
             entity.ToTable("DetallesFactura", "dbo");
             entity.HasKey(e => e.DetalleFacturaId).HasName("PK_DetallesFactura");
 
-            entity.ToTable(tb => tb.HasTrigger("TR_DetallesFactura_RecalcularTotales"));
+            entity.ToTable(tb => tb.UseSqlOutputClause(false));
 
             entity.HasIndex(e => e.FacturaId, "IX_DetallesFactura_Factura");
 

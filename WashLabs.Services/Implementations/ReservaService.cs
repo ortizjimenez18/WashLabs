@@ -15,10 +15,10 @@ public sealed class ReservaService(IReservaRepository repository) : IReservaServ
         var cita = await repository.ObtenerClienteAsync(id, clienteId, ct);
         return cita is null ? null : ReservaMapper.ToDTO(cita);
     }
-    public Task<FormularioReservaDTO?> FormularioAsync(int encargadoId, CancellationToken ct = default) => repository.FormularioAsync(encargadoId, ct);
+    public Task<FormularioReservaDTO?> FormularioAsync(int encargadoId, CancellationToken ct = default, int? sucursalId = null) => repository.FormularioAsync(encargadoId, ct, sucursalId);
 
-    public async Task<IReadOnlyList<TimeOnly>> HorariosAsync(int encargadoId, int servicioId, DateOnly fecha, CancellationToken ct = default) =>
-        DisponibilidadReserva.Calcular(await repository.AgendaAsync(encargadoId, servicioId, fecha, ct), fecha);
+    public async Task<IReadOnlyList<TimeOnly>> HorariosAsync(int encargadoId, int servicioId, DateOnly fecha, CancellationToken ct = default, int? sucursalId = null) =>
+        DisponibilidadReserva.Calcular(await repository.AgendaAsync(encargadoId, servicioId, fecha, ct, sucursalId), fecha);
 
     public async Task<ResultadoCrearReservaDTO> CrearAsync(CrearReservaDTO solicitud, int encargadoId, CancellationToken ct = default, int? creadorId = null)
     {
@@ -35,9 +35,9 @@ public sealed class ReservaService(IReservaRepository repository) : IReservaServ
     public async Task<ReservasHistorialDTO?> ListarAsync(int encargadoId, CancellationToken cancellationToken = default)
     {
         var encargado = await repository.ObtenerEncargadoAsync(encargadoId, cancellationToken);
-        if (encargado?.Sucursal is null) return null;
+        if (encargado is null) return null;
         var reservas = await repository.ListarAsync(encargadoId, cancellationToken);
-        return new(encargado.NombreCompleto, encargado.Sucursal.Nombre,
+        return new(encargado.NombreCompleto, encargado.Sucursal?.Nombre ?? "Todas las sucursales",
             reservas.Select(ReservaMapper.ToResumenDTO).ToArray());
     }
 

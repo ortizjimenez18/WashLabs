@@ -51,6 +51,9 @@ public sealed class OperacionService(IOperacionRepository repository) : IOperaci
     public Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct = default) =>
         id > 0 && encargadoId > 0 ? repository.CompletarCitaAsync(id, encargadoId, ct) : Task.FromResult(false);
 
+    public Task<bool> CancelarCitaAsync(long id, int usuarioId, CancellationToken ct = default) =>
+        id > 0 && usuarioId > 0 ? repository.CancelarCitaAsync(id, usuarioId, ct) : Task.FromResult(false);
+
     public Task<bool> AsignarVehiculoAsync(long citaId, int vehiculoId, int encargadoId, CancellationToken ct = default) =>
         citaId > 0 && vehiculoId > 0 && encargadoId > 0
             ? repository.AsignarVehiculoAsync(citaId, vehiculoId, encargadoId, ct) : Task.FromResult(false);

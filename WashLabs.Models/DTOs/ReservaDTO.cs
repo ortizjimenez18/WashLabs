@@ -8,4 +8,4 @@ public sealed record ReservasHistorialDTO(string Encargado, string Sucursal,
 public sealed record RespuestaReservaDTO(string Pregunta, string Respuesta);
 public sealed record ReservaDTO(long CitaId, DateTime FechaCreacion, DateOnly Fecha,
     TimeOnly HoraInicio, TimeOnly HoraFin, string Sucursal, string Servicio,
-    EstadoReservaDTO Estado, IReadOnlyList<RespuestaReservaDTO> Respuestas, string Matricula, int ClienteId);
+    EstadoReservaDTO Estado, IReadOnlyList<RespuestaReservaDTO> Respuestas, string Matricula, int ClienteId, long? FacturaId = null);

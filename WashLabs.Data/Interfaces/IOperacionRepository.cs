@@ -11,5 +11,6 @@ public interface IOperacionRepository
     Task<IReadOnlyList<CategoriaAsistente>> CategoriasAsistenteAsync(CancellationToken ct);
     Task<PreguntaAsistente?> PreguntaAsync(int id, CancellationToken ct);
     Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct);
+    Task<bool> CancelarCitaAsync(long id, int usuarioId, CancellationToken ct);
     Task<bool> AsignarVehiculoAsync(long citaId, int vehiculoId, int encargadoId, CancellationToken ct);
 }

@@ -23,7 +23,15 @@
         </dl>
         @if (Model.Respuestas.Count == 0) { <p class="muted">Esta reserva no tiene respuestas registradas.</p> }
     </div>
-    <div class="detail-actions"><a class="button" asp-action="Index"> Volver al historial</a></div>
+    <div class="detail-actions"><a class="button" asp-action="Index"> Volver al historial</a><a class="button" asp-controller="Facturacion" asp-action="Index">Consultar facturación</a></div>
+    @if (Model.FacturaId.HasValue)
+    {
+        <p><a asp-controller="Facturacion" asp-action="Detalle" asp-route-id="@Model.FacturaId">Ver documento #@Model.FacturaId</a></p>
+    }
+    @if (Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
+    {
+        <form method="post" asp-action="Cancelar" asp-route-id="@Model.CitaId" class="completion-form"><button class="button" type="submit">Cancelar reserva</button></form>
+    }
     @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
     {
         <form method="post" asp-action="Completar" asp-route-id="@Model.CitaId" class="completion-form">

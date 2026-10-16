@@ -7,6 +7,7 @@
     <title>@ViewData["Title"] · WashLabs</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/experience.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>

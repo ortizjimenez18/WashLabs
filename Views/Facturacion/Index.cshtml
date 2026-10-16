@@ -1,24 +1,79 @@
-@model IReadOnlyList<WashLabs.Models.DTOs.FacturaResumenDTO>
-@{ ViewData["Title"] = "Facturación"; var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR"); }
-<section class="shell page-heading"><p class="eyebrow">WASHLABS / HISTORIAL</p><h1>Facturación</h1><p class="lede">Comprobantes ordenados del más reciente al más antiguo.</p></section>
-<section class="shell history-section" aria-label="Historial de facturas">
-    @if (Model.Count == 0)
+@model WashLabs.ViewModels.FacturacionIndexViewModel
+@{
+    ViewData["Title"] = "Facturación";
+    var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR");
+    var filtro = Model.Filtro;
+    var volverUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+}
+@section Styles { <link rel="stylesheet" href="~/css/facturacion.css" asp-append-version="true" /> }
+<section class="shell billing-page">
+    <header class="billing-heading">
+        <div><p class="eyebrow">WASHLABS / DOCUMENTOS</p><h1>Facturación</h1><p class="lede">Consulta tus comprobantes y gestiona las proformas de cada reserva.</p></div>
+        @if (!User.IsInRole("Cliente"))
+        {
+            var estadoProforma = Model.Historial.Estados.FirstOrDefault(e => e.Nombre == "Proforma");
+            <a class="button billing-secondary" asp-action="Index" asp-route-TipoDocumento="PROFORMA" asp-route-EstadoFacturaId="@estadoProforma?.EstadoFacturaId">Proformas pendientes</a>
+        }
+    </header>
+    <div class="billing-summary" aria-label="Resumen de los resultados">
+        <article><span>Facturas</span><strong>@Model.Historial.Resumen.Facturas</strong><small>Documentos definitivos</small></article>
+        <article><span>Proformas pendientes</span><strong>@Model.Historial.Resumen.ProformasPendientes</strong><small>Órdenes por finalizar</small></article>
+        <article><span>Total facturado</span><strong>₡ @Model.Historial.Resumen.TotalFacturado.ToString("N2", culture)</strong><small>Facturas vigentes de la búsqueda. No representa pagos.</small></article>
+    </div>
+    <form asp-action="Index" method="get" class="billing-filters" aria-label="Filtros de facturación">
+        <div class="billing-filter-heading"><h2>Buscar documentos</h2><span>Combina los criterios que necesites.</span></div>
+        <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+        <div class="billing-filter-grid">
+            <div><label for="TipoDocumento">Tipo de documento</label><select id="TipoDocumento" name="TipoDocumento">
+                <option value="">Todos</option><option value="FACTURA" selected="@(filtro.TipoDocumento == "FACTURA")">Facturas</option><option value="PROFORMA" selected="@(filtro.TipoDocumento == "PROFORMA")">Proformas</option>
+            </select></div>
+            <div><label for="EstadoFacturaId">Estado de facturación</label><select id="EstadoFacturaId" name="EstadoFacturaId"><option value="">Todos los estados</option>
+                @foreach (var estado in Model.Historial.Estados) { <option value="@estado.EstadoFacturaId" selected="@(filtro.EstadoFacturaId == estado.EstadoFacturaId)">@estado.Nombre</option> }
+            </select></div>
+            <div><label for="FechaInicial">Fecha inicial</label><input id="FechaInicial" name="FechaInicial" type="date" value="@filtro.FechaInicial?.ToString("yyyy-MM-dd")" /></div>
+            <div><label for="FechaFinal">Fecha final</label><input id="FechaFinal" name="FechaFinal" type="date" value="@filtro.FechaFinal?.ToString("yyyy-MM-dd")" /></div>
+            <div class="billing-filter-client"><label for="Cliente">Cliente o identificación</label><input id="Cliente" name="Cliente" value="@filtro.Cliente" maxlength="120" placeholder="Nombre o identificación" /></div>
+            <div><label for="NumeroDocumento">Número de documento</label><input id="NumeroDocumento" name="NumeroDocumento" type="number" min="1" step="1" value="@filtro.NumeroDocumento" placeholder="Ej. 125" /></div>
+            @if (Model.MostrarSucursal)
+            {
+                <div><label for="SucursalId">Sucursal</label><select id="SucursalId" name="SucursalId"><option value="">Todas las sucursales</option>
+                    @foreach (var sucursal in Model.Historial.Sucursales) { <option value="@sucursal.SucursalId" selected="@(filtro.SucursalId == sucursal.SucursalId)">@sucursal.Nombre</option> }
+                </select></div>
+            }
+            <div><label for="Orden">Ordenar por</label><select id="Orden" name="Orden">
+                <option value="recientes" selected="@(filtro.Orden == "recientes")">Recientes primero</option>
+                <option value="antiguas" selected="@(filtro.Orden == "antiguas")">Antiguas primero</option>
+                <option value="mayor" selected="@(filtro.Orden == "mayor")">Mayor importe</option>
+                <option value="menor" selected="@(filtro.Orden == "menor")">Menor importe</option>
+            </select></div>
+        </div>
+        <div class="billing-filter-actions"><button class="button" type="submit">Aplicar filtros</button><a class="button billing-secondary" asp-action="Index">Limpiar filtros</a></div>
+    </form>
+    <div class="billing-results-heading"><h2>Documentos</h2><span>@Model.Historial.Documentos.Count resultado(s)</span></div>
+    @if (Model.Historial.Documentos.Count == 0)
     {
-        <div class="empty-state"><h2>No hay facturas registradas.</h2><p>Las facturas aparecerán aquí cuando estén disponibles.</p></div>
+        <div class="empty-state"><h2>No encontramos documentos con estos criterios.</h2><p>Prueba otro número, cliente o período.</p><a class="button billing-secondary" asp-action="Index">Limpiar filtros</a></div>
     }
     else
     {
-        <div class="record-list">
-            @foreach (var factura in Model)
-            {
-                <article class="record-card">
-                    <dl><dt>Factura</dt><dd>#@factura.FacturaId</dd></dl>
-                    <dl><dt>Cliente</dt><dd>@factura.Cliente</dd></dl>
-                    <dl><dt>Fecha</dt><dd><time datetime="@factura.Fecha.ToString("s")">@factura.Fecha.ToString("dd/MM/yyyy HH:mm")</time></dd></dl>
-                    <dl><dt>Total</dt><dd>₡ @factura.Total.ToString("N2", culture)</dd></dl>
-                    <a class="record-link" asp-action="Detalle" asp-route-id="@factura.FacturaId" aria-label="Ver factura @factura.FacturaId">Ver detalle </a>
-                </article>
-            }
+        <div class="billing-ledger-wrap">
+            <table class="billing-ledger"><caption class="billing-sr-only">Historial de facturas y proformas</caption>
+                <thead><tr><th scope="col">Documento</th><th scope="col">Cliente</th><th scope="col">Fecha de emisión</th><th scope="col" class="numeric">Total</th></tr></thead>
+                <tbody>
+                @foreach (var documento in Model.Historial.Documentos)
+                {
+                    <tr data-document-id="@documento.FacturaId">
+                        <td data-label="Documento"><a class="billing-document-link" asp-action="Detalle" asp-route-id="@documento.FacturaId" asp-route-volverUrl="@volverUrl" aria-label="Ver @documento.TipoDocumento @documento.FacturaId">#@documento.FacturaId <span aria-hidden="true">↗</span></a>
+                            <div class="billing-document-tags">@if (documento.TipoDocumento != "PROFORMA" || documento.Estado != "Proforma") { <span class="billing-type">@(documento.TipoDocumento == "PROFORMA" ? "Proforma" : "Factura")</span> }<partial name="_EstadoFactura" model="documento.Estado" /></div>
+                        </td>
+                        <td data-label="Cliente">@documento.Cliente</td>
+                        <td data-label="Fecha de emisión"><time datetime="@documento.Fecha.ToString("s")">@documento.Fecha.ToString("dd/MM/yyyy")<small>@documento.Fecha.ToString("HH:mm")</small></time></td>
+                        <td data-label="Total" class="numeric billing-amount">₡ @documento.Total.ToString("N2", culture)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
         </div>
     }
 </section>
+@section Scripts { <script src="~/js/facturacion.js" asp-append-version="true"></script> }

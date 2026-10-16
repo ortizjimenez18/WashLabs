@@ -1,12 +1,12 @@
 # Persistencia de WashLabs
 
-## Estado de preparación
+## Persistencia del Avance 3
 
-- Rama: `feature/conexion-base-datos`.
+- La rama se consulta con `git branch --show-current`; no se cambia automáticamente.
 - .NET 8; Microsoft.EntityFrameworkCore.SqlServer, Design y Tools 8.0.31 en Data.
 - Design 8.0.31 también está en el proyecto web, utilizado como proyecto de inicio por las herramientas.
 - SQL Server local: `localhost`, Windows Authentication, base `WashLabsDB` en línea.
-- La inspección se limitó a consultas SELECT de metadatos: 35 tablas en dbo, incluida sysdiagrams.
+- WashLabsDB se inspecciona con consultas de solo lectura: 34 tablas de negocio y 47 FK.
 - Scaffold ejecutado con EF Core 8.0.31: 34 entidades en `WashLabs.Data/Entities`
   y contexto en `WashLabs.Data/Context`. No se ejecutaron migraciones ni cambios SQL.
 - Respaldo previo verificado: `artifacts/database-first-20261010-190643` (ignorado por Git).
@@ -20,12 +20,13 @@ Data registra `WashLabsDbContext` con alcance scoped y proveedor SQL Server, usa
 compatibilidad SQL 150 (SQL Server 2019). Este ajuste configura las consultas de EF;
 no altera la compatibilidad de la base.
 
-El contexto ya contiene el modelo de la base existente. Los futuros
-controllers consumirán interfaces de Services; sus implementaciones consumirán
+El contexto ya contiene el modelo de la base existente. Los
+controllers consumen interfaces de Services; sus implementaciones consumen
 interfaces de repositorios de Data; solo las implementaciones de repositorios
-accederán al DbContext. Por indicación del usuario, las entidades de persistencia
+acceden al DbContext. Las entidades de persistencia
 están en Data/Entities; no se añadieron entidades a Models ni referencias nuevas
-entre proyectos. No se generaron controllers, servicios de negocio o repositorios.
+entre proyectos. Productos, facturación, reservas, cuentas, vehículos, WashPoints
+y asistente cuentan con repositorios y servicios registrados.
 No hay llamadas a EnsureCreated, EnsureDeleted o Migrate al iniciar la aplicación.
 
 La clave `ConnectionStrings:WashLabsDB` está configurada en User Secrets del
@@ -89,3 +90,35 @@ metadatos SQL y realiza una consulta LINQ `AsNoTracking` de solo lectura.
 Compilar con `dotnet build WashLabs.sln`; no ejecutar Update-Database ni migraciones.
 
 Referencia: [herramientas EF Core para Package Manager Console](https://learn.microsoft.com/en-us/ef/core/cli/powershell).
+
+## Operaciones y límites actuales
+
+La inspección del Avance 3 confirmó cero triggers. `HasTrigger` no crea triggers SQL;
+se retiraron sus declaraciones y se conservó `UseSqlOutputClause(false)`.
+Reservar verifica disponibilidad, preguntas y propiedad del vehículo dentro de una
+transacción Serializable. La reserva y su proforma se guardan juntas mediante EF;
+no se depende de triggers ni de historial automático.
+
+Completar acredita WashPoints mediante una transacción ReadCommitted y un bloqueo
+exclusivo del vehículo antes de leer o crear su tarjeta. Se conservan los índices
+únicos por vehículo y por cita/ACUMULA. No se acreditan citas históricas ya completadas,
+no se reinician ciclos y no se crean recompensas.
+
+Facturación consulta ambos tipos de documento. Solo personal autorizado puede
+agregar, cambiar cantidades y quitar productos de una proforma activa. Las líneas mantienen sus columnas calculadas
+SQL; el repositorio suma los importes persistidos y actualiza la cabecera dentro de
+la misma transacción. Completar convierte la proforma en FACTURA/Pendiente junto con
+la cita y WashPoints. Cancelar conserva la proforma Anulada. No se registran pagos.
+Ver [integración de facturación](integracion-facturacion.md) para pruebas y límites.
+El historial filtra y ordena en SQL antes de materializar; los indicadores usan
+agregaciones de la misma consulta autorizada. Las proformas y facturas anuladas
+no suman en Total facturado. Ver [facturador](facturador-avance3.md).
+
+No ejecutar seeds anteriores automáticamente: el catálogo y los ejemplos de facturas
+ya existen. `Database/VerificarAvance3.sql` es de solo lectura.
+`Database/IdentificacionesDemoAvance3.sql` requiere seleccionar y aprobar usuarios
+DEMO; no se ejecutó contra WashLabsDB. No requiere modificar el esquema.
+
+Las pruebas con escrituras usan exclusivamente `WashLabs_Pruebas_Avance3`, con
+autorización del usuario. El esquema generado desde EF no reproduce todas las
+restricciones CHECK originales. Ver [avance3.md](avance3.md).

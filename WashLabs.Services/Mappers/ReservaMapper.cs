@@ -21,5 +21,5 @@ public static partial class ReservaMapper
     public static ReservaDTO ToDTO(Cita cita) => new(cita.CitaId, cita.FechaCreacion, cita.Fecha,
         cita.HoraInicio, cita.HoraFin, cita.Sucursal.Nombre, cita.Servicio.Nombre, ToDTO(cita.EstadoCita),
         cita.RespuestasReserva.OrderBy(r => r.PreguntaReserva.Orden).ThenBy(r => r.PreguntaReservaId)
-            .Select(r => new RespuestaReservaDTO(r.PreguntaReserva.Pregunta, r.Respuesta)).ToArray(), cita.Vehiculo.Matricula, cita.ClienteId);
+            .Select(r => new RespuestaReservaDTO(r.PreguntaReserva.Pregunta, r.Respuesta)).ToArray(), cita.Vehiculo.Matricula, cita.ClienteId, cita.Facturas?.FacturaId);
 }

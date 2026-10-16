@@ -170,6 +170,7 @@
         try {
             const url = new URL(form.dataset.availabilityUrl, location.origin);
             url.searchParams.set('servicioId', service.value);
+            url.searchParams.set('sucursalId', form.querySelector('[name="Reserva.SucursalId"]').value);
             url.searchParams.set('fecha', date.value);
             const response = await fetch(url, { credentials: 'same-origin', signal: controller.signal });
             if (!response.ok) throw new Error('Disponibilidad no disponible');

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- The web project lives at the repository root; sibling layers own their files. -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);WashLabs.Data/**;WashLabs.Models/**;WashLabs.Services/**;WashLabs/**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);WashLabs.Data/**;WashLabs.Models/**;WashLabs.Services/**;WashLabs/**;tests/**</DefaultItemExcludes>
     <UserSecretsId>84cd4722-f2f7-45ff-80bb-b95a43666266</UserSecretsId>
   </PropertyGroup>
 
