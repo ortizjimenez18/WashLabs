@@ -13,7 +13,7 @@
     <div id="service-rail" class="service-rail" tabindex="0" aria-label="Servicios disponibles">
         @foreach (var servicio in Model.Servicios)
         {
-            <article class="experience-service"><span class="service-duration">@servicio.DuracionMinutos min</span><h3>@servicio.Nombre</h3><p>@servicio.Descripcion</p><div class="service-bottom"><span>Desde</span><strong>₡ @servicio.TarifaBase.ToString("N2", culture)</strong></div><a class="service-reservation" asp-controller="Reservas" asp-action="Crear" asp-route-servicioId="@servicio.ServicioId">Reservar servicio</a></article>
+            <article class="experience-service"><span class="service-duration">@servicio.DuracionMinutos min</span><h3>@servicio.Nombre</h3><p>@servicio.Descripcion</p><div class="service-bottom"><span>Desde</span><strong>₡ @servicio.TarifaBase.ToString("#,##0.##", culture)</strong></div><a class="service-reservation" asp-controller="Reservas" asp-action="Crear" asp-route-servicioId="@servicio.ServicioId">Reservar servicio</a></article>
         }
     </div></section>
 }

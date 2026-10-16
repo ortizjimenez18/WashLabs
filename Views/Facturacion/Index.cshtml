@@ -18,7 +18,7 @@
     <div class="billing-summary" aria-label="Resumen de los resultados">
         <article><span>Facturas</span><strong>@Model.Historial.Resumen.Facturas</strong><small>Documentos definitivos</small></article>
         <article><span>Proformas pendientes</span><strong>@Model.Historial.Resumen.ProformasPendientes</strong><small>Órdenes por finalizar</small></article>
-        <article><span>Total facturado</span><strong>₡ @Model.Historial.Resumen.TotalFacturado.ToString("N2", culture)</strong><small>Facturas vigentes de la búsqueda. No representa pagos.</small></article>
+        <article class="billing-money-summary"><span>Total facturado</span><strong>₡ @Model.Historial.Resumen.TotalFacturado.ToString("#,##0.##", culture)</strong><small>Facturas vigentes de la búsqueda. No representa pagos.</small></article>
     </div>
     <form asp-action="Index" method="get" class="billing-filters" aria-label="Filtros de facturación">
         <div class="billing-filter-heading"><h2>Buscar documentos</h2><span>Combina los criterios que necesites.</span></div>
@@ -67,8 +67,8 @@
                             <div class="billing-document-tags">@if (documento.TipoDocumento != "PROFORMA" || documento.Estado != "Proforma") { <span class="billing-type">@(documento.TipoDocumento == "PROFORMA" ? "Proforma" : "Factura")</span> }<partial name="_EstadoFactura" model="documento.Estado" /></div>
                         </td>
                         <td data-label="Cliente">@documento.Cliente</td>
-                        <td data-label="Fecha de emisión"><time datetime="@documento.Fecha.ToString("s")">@documento.Fecha.ToString("dd/MM/yyyy")<small>@documento.Fecha.ToString("HH:mm")</small></time></td>
-                        <td data-label="Total" class="numeric billing-amount">₡ @documento.Total.ToString("N2", culture)</td>
+                        <td data-label="Fecha de emisión"><time datetime="@documento.Fecha.ToString("s")">@documento.Fecha.ToString("MM/dd/yyyy")<small>@documento.Fecha.ToString("HH:mm")</small></time></td>
+                        <td data-label="Total" class="numeric billing-amount">₡ @documento.Total.ToString("#,##0.##", culture)</td>
                     </tr>
                 }
                 </tbody>

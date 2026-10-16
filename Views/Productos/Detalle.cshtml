@@ -5,7 +5,7 @@
     <div class="detail-grid"><partial name="_ProductoImagen" model="Model" />
         <div class="detail-copy">
             <a class="eyebrow" asp-action="Index" asp-route-categoriaId="@Model.CategoriaProductoId">@Model.Categoria </a><h1>@Model.Nombre</h1>
-            <p class="detail-price">₡ @Model.Precio.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</p><p class="description">@Model.Descripcion</p>
+            <p class="detail-price">₡ @Model.Precio.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</p><p class="description">@Model.Descripcion</p>
             <dl class="specifications">
                 <div><dt>Marca</dt><dd>@(Model.Marca ?? "No especificada")</dd></div>
                 <div><dt>Presentación</dt><dd>@(Model.Presentacion ?? "No especificada")</dd></div>

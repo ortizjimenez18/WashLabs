@@ -14,7 +14,7 @@
             @foreach (var reserva in Model.Reservas)
             {
                 <article class="record-card">
-                    <dl><dt>Fecha y hora</dt><dd>@reserva.Fecha.ToString("dd/MM/yyyy") · @reserva.HoraInicio.ToString("HH:mm")</dd></dl>
+                    <dl><dt>Fecha y hora</dt><dd>@reserva.Fecha.ToString("MM/dd/yyyy") · @reserva.HoraInicio.ToString("HH:mm")</dd></dl>
                     <dl><dt>Cliente</dt><dd>@reserva.Cliente</dd></dl>
                     <dl><dt>Servicio</dt><dd>@reserva.Servicio</dd></dl>
                     <dl><dt>Estado</dt><dd><partial name="_EstadoReserva" model="reserva.Estado" /></dd></dl>

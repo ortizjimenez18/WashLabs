@@ -1,4 +1,4 @@
-﻿@model WashLabs.ViewModels.WashPointsIndexViewModel
+@model WashLabs.ViewModels.WashPointsIndexViewModel
 @{ ViewData["Title"] = "WashPoints"; }
 <section class="shell page-heading"><p class="eyebrow">WASHLABS / FIDELIZACIÓN</p><h1>Tarjeta WashPoints</h1><p class="lede">El progreso de cada vehículo, identificado por su matrícula.</p></section>
 <section class="shell history-section">
@@ -18,7 +18,7 @@
                 <p class="loyalty-remaining">@(faltantes > 0 ? $"Faltan {faltantes} lavados para obtener la recompensa." : "Has alcanzado la meta de lavados.")</p>
                 <details><summary>Registro de lavados</summary>
                 @if (puntos.Movimientos.Count == 0) { <p class="muted">Este vehículo aún no tiene lavados completados.</p> }
-                else { <ul class="wash-history">@foreach (var movimiento in puntos.Movimientos) { <li><time datetime="@movimiento.Fecha.ToString("s")">@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</time><span>Cita #@movimiento.CitaId</span><strong>+@movimiento.Cantidad</strong></li> }</ul> }
+                else { <ul class="wash-history">@foreach (var movimiento in puntos.Movimientos) { <li><time datetime="@movimiento.Fecha.ToString("s")">@movimiento.Fecha.ToString("MM/dd/yyyy HH:mm")</time><span>Cita #@movimiento.CitaId</span><strong>+@movimiento.Cantidad</strong></li> }</ul> }
                 </details>
             </div>
         </article>

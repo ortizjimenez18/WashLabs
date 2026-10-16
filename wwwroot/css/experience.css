@@ -57,7 +57,7 @@ h3 { font-family:'Segoe UI',Arial,sans-serif; letter-spacing:-.5px; }
 .experience-service p { font-size:16px; line-height:1.7; color:#515860; margin-bottom:32px; }
 .experience-service .service-bottom { margin-top:auto; display:flex; justify-content:space-between; gap:15px; align-items:center; text-align:left; border-top:1px solid #a2a7ad; padding-top:20px; }
 .experience-service .service-bottom span { font-size:14px; margin:0; }
-.experience-service .service-bottom strong { font-size:20px; }
+.experience-service .service-bottom strong { font-size:20px; margin-left:auto; text-align:right; }
 .service-reservation { display:flex; align-items:center; justify-content:space-between; font-size:15px; font-weight:650; margin-top:24px; text-decoration:underline; text-underline-offset:5px; }
 .service-reservation:hover { text-decoration-thickness:2px; }
 .rail-controls { display:flex; gap:10px; }
@@ -85,6 +85,19 @@ h3 { font-family:'Segoe UI',Arial,sans-serif; letter-spacing:-.5px; }
 .product-card { border-radius:8px; }
 .product-copy { padding:26px; }
 .card-bottom { font-size:20px; }
+.card-bottom strong { order:2; margin-left:auto; text-align:right; }
+.detail-price,.numeric { text-align:right; font-variant-numeric:tabular-nums; }
+.assistant-controls { display:flex; align-items:center; gap:6px; }
+.assistant-controls button { border:0; background:transparent; color:white; min-width:34px; min-height:40px; font-size:24px; cursor:pointer; }
+.assistant-controls button:focus-visible { outline:2px solid white; outline-offset:2px; }
+.assistant-header { cursor:grab; touch-action:none; }
+.assistant-header:active { cursor:grabbing; }
+.assistant-widget .assistant-panel { border-width:7px; cursor:grab; touch-action:none; }
+.assistant-panel:active { cursor:grabbing; }
+.assistant-panel:focus-visible { outline:2px solid #73787d; outline-offset:3px; }
+.assistant-thread,.assistant-options,.assistant-footer { cursor:auto; touch-action:pan-y; }
+.assistant-widget.is-positioned { right:auto; bottom:auto; display:flex; flex-direction:column; align-items:flex-end; gap:16px; max-width:calc(100vw - 16px); }
+.assistant-widget.is-positioned .assistant-panel { position:static; order:-1; width:min(390px,calc(100vw - 16px)); max-height:calc(100dvh - 110px); }
 .branch-card h3 { font-size:26px; }
 .branch-card p,.branch-contact { font-size:16px; }
 .branch-contact dt { font-size:14px; }
@@ -107,6 +120,8 @@ label,.result-count { font-size:15px; }
 .assistant-widget { position:fixed; right:26px; bottom:26px; z-index:70; }
 .assistant-launcher { display:none; align-items:center; gap:12px; background:#24272b; color:white; border:2px solid #d2d6db; border-radius:35px; padding:16px 22px; min-height:62px; box-shadow:0 8px 26px #0005; font-size:16px; font-weight:650; cursor:pointer; }
 .js-ready .assistant-launcher { display:flex; }
+.assistant-widget .assistant-launcher { touch-action:none; user-select:none; cursor:grab; }
+.assistant-widget.is-dragging .assistant-launcher { cursor:grabbing; transform:none; }
 .assistant-launcher:hover { background:#050607; transform:translateY(-2px); box-shadow:0 12px 32px #0006; }
 .launcher-dot { width:9px; height:9px; border-radius:50%; background:#e6e7e8; box-shadow:0 0 0 4px #ffffff1a; }
 .assistant-panel { position:absolute; bottom:80px; right:0; width:390px; max-height:min(640px,calc(100dvh - 130px)); display:flex; flex-direction:column; background:white; color:#141619; border:1px solid #c6cbd0; border-radius:16px; box-shadow:0 18px 70px #0005; overflow:hidden; }

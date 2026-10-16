@@ -33,6 +33,76 @@
     let initialized = false;
     let requestId = 0;
     let busy = false;
+    const header = widget.querySelector('.assistant-header');
+    let position = null;
+    let drag = null;
+    let launcherDrag = null;
+    let suppressLauncherClick = false;
+    launcher.title = 'Arrastra para mover; haz clic para abrir';
+    launcher.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || !event.isPrimary) return;
+        suppressLauncherClick = false;
+        const bounds = widget.getBoundingClientRect();
+        launcherDrag = {
+            x: event.clientX, y: event.clientY, left: bounds.left,
+            top: position?.top ?? (panel.hidden ? bounds.top : panel.getBoundingClientRect().top),
+            pointerId: event.pointerId, moved: false
+        };
+        launcher.setPointerCapture(event.pointerId);
+    });
+    launcher.addEventListener('pointermove', event => {
+        if (!launcherDrag || event.pointerId !== launcherDrag.pointerId) return;
+        const dx = event.clientX - launcherDrag.x;
+        const dy = event.clientY - launcherDrag.y;
+        if (!launcherDrag.moved && Math.hypot(dx, dy) < 6) return;
+        launcherDrag.moved = true;
+        suppressLauncherClick = true;
+        widget.classList.add('is-dragging');
+        place(launcherDrag.left + dx, launcherDrag.top + dy);
+    });
+    function endLauncherDrag() {
+        launcherDrag = null;
+        widget.classList.remove('is-dragging');
+    }
+    launcher.addEventListener('pointerup', endLauncherDrag);
+    launcher.addEventListener('pointercancel', endLauncherDrag);
+    launcher.addEventListener('lostpointercapture', endLauncherDrag);
+    function place(left, top) {
+        const width = Math.max(launcher.offsetWidth, panel.hidden ? 0 : panel.offsetWidth);
+        const height = launcher.offsetHeight + (panel.hidden ? 0 : panel.offsetHeight + 16);
+        position = {
+            left: Math.max(8, Math.min(left, window.innerWidth - width - 8)),
+            top: Math.max(8, Math.min(top, window.innerHeight - height - 8))
+        };
+        widget.classList.add('is-positioned');
+        widget.style.left = position.left + 'px';
+        widget.style.top = position.top + 'px';
+    }
+    panel.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || event.target.closest('button, a, input, select')) return;
+        if (event.target !== panel && !header.contains(event.target)) return;
+        const bounds = widget.getBoundingClientRect();
+        place(bounds.left, panel.getBoundingClientRect().top);
+        drag = { x: event.clientX, y: event.clientY, ...position };
+        panel.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    });
+    panel.addEventListener('pointermove', event => {
+        if (drag) place(drag.left + event.clientX - drag.x, drag.top + event.clientY - drag.y);
+    });
+    panel.addEventListener('lostpointercapture', () => { drag = null; });
+    panel.addEventListener('pointerup', () => { drag = null; });
+    panel.addEventListener('pointercancel', () => { drag = null; });
+    panel.addEventListener('keydown', event => {
+        if (event.target !== panel) return;
+        const steps = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] };
+        if (!steps[event.key]) return;
+        event.preventDefault();
+        const bounds = widget.getBoundingClientRect();
+        const top = position?.top ?? panel.getBoundingClientRect().top;
+        place(bounds.left + steps[event.key][0], top + steps[event.key][1]);
+    });
+    window.addEventListener('resize', () => { if (position) place(position.left, position.top); });
     function message(text, user = false) {
         const bubble = document.createElement('p');
         bubble.className = 'chat-message' + (user ? ' user' : '');
@@ -113,14 +183,21 @@
         launcher.setAttribute('aria-expanded', 'false');
         launcher.focus();
     }
-    launcher.addEventListener('click', () => {
+    launcher.addEventListener('click', event => {
+        if (suppressLauncherClick && event.detail !== 0) {
+            suppressLauncherClick = false;
+            event.preventDefault();
+            return;
+        }
         if (!panel.hidden) return closeAssistant();
         panel.hidden = false;
+        if (position) place(position.left, position.top);
         launcher.setAttribute('aria-expanded', 'true');
         widget.querySelector('.assistant-close').focus();
         if (!initialized) { initialized = true; categories(); }
     });
     widget.querySelector('.assistant-close').addEventListener('click', closeAssistant);
+    widget.querySelector('.assistant-minimize').addEventListener('click', closeAssistant);
     restart.addEventListener('click', categories);
     document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;

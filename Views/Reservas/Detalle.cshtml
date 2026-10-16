@@ -6,7 +6,7 @@
     @if (TempData["Mensaje"] is string mensaje) { <p class="notice" role="status">@mensaje</p> }
     <div class="document-panel">
         <div class="document-meta">
-            <div><h2>Horario de la reserva</h2><p><span class="meta-label">Fecha</span> @Model.Fecha.ToString("dd/MM/yyyy")</p><p><span class="meta-label">Horario</span> @Model.HoraInicio.ToString("HH:mm") – @Model.HoraFin.ToString("HH:mm")</p><p><span class="meta-label">Creada el</span> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p></div>
+            <div><h2>Horario de la reserva</h2><p><span class="meta-label">Fecha</span> @Model.Fecha.ToString("MM/dd/yyyy")</p><p><span class="meta-label">Horario</span> @Model.HoraInicio.ToString("HH:mm") – @Model.HoraFin.ToString("HH:mm")</p><p><span class="meta-label">Creada el</span> @Model.FechaCreacion.ToString("MM/dd/yyyy HH:mm")</p></div>
             <div><h2>Sucursal y servicio</h2><p><span class="meta-label">Sucursal</span> @Model.Sucursal</p><p><span class="meta-label">Servicio</span> @Model.Servicio</p></div>
         </div>
         <h2 class="subheading">Información para el servicio</h2>

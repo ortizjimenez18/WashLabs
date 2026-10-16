@@ -20,7 +20,7 @@
     <article class="billing-invoice" aria-label="@titulo #@factura.FacturaId">
         <header class="billing-invoice-heading">
             <div class="billing-company"><div class="billing-logo"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /></div><strong>@(factura.NombreNegocio ?? "WashLabs")</strong><span>@factura.Sucursal.Nombre</span></div>
-            <div class="billing-invoice-number"><p class="eyebrow">@factura.TipoDocumento</p><h2>#@factura.FacturaId</h2><partial name="_EstadoFactura" model="factura.Estado" /><p>Emisión: @factura.Fecha.ToString("dd/MM/yyyy HH:mm")</p></div>
+            <div class="billing-invoice-number"><p class="eyebrow">@factura.TipoDocumento</p><h2>#@factura.FacturaId</h2><partial name="_EstadoFactura" model="factura.Estado" /><p>Emisión: @factura.Fecha.ToString("MM/dd/yyyy HH:mm")</p></div>
         </header>
         <div class="billing-invoice-meta">
             <section><h3>Facturado a</h3><strong>@factura.Cliente</strong><p>Identificación: @(factura.IdentificacionCliente ?? "No registrada")</p>
@@ -33,8 +33,8 @@
             @foreach (var linea in factura.Lineas)
             {
                 <tr>
-                    <td><strong>@linea.Descripcion</strong><small>@linea.Tipo · IVA @linea.PorcentajeImpuesto.ToString("0.##", culture)%: ₡ @linea.Impuesto.ToString("N2", culture)</small>
-                        @if (linea.Descuento > 0) { <small>Descuento: ₡ @linea.Descuento.ToString("N2", culture)</small> }
+                    <td><strong>@linea.Descripcion</strong><small>@linea.Tipo · IVA @linea.PorcentajeImpuesto.ToString("0.##", culture)%: ₡ @linea.Impuesto.ToString("#,##0.##", culture)</small>
+                        @if (linea.Descuento > 0) { <small>Descuento: ₡ @linea.Descuento.ToString("#,##0.##", culture)</small> }
                         @if (Model.PuedeEditar && linea.ProductoId.HasValue)
                         {
                             <div class="billing-line-actions billing-no-print">
@@ -51,7 +51,7 @@
                             </div>
                         }
                     </td>
-                    <td class="numeric" data-label="Cantidad">@linea.Cantidad.ToString("0.##", culture)</td><td class="numeric" data-label="Precio unitario">₡ @linea.PrecioUnitario.ToString("N2", culture)</td><td class="numeric" data-label="Subtotal">₡ @linea.Subtotal.ToString("N2", culture)</td>
+                    <td class="numeric" data-label="Cantidad">@linea.Cantidad.ToString("0.##", culture)</td><td class="numeric" data-label="Precio unitario">₡ @linea.PrecioUnitario.ToString("#,##0.##", culture)</td><td class="numeric" data-label="Subtotal">₡ @linea.Subtotal.ToString("#,##0.##", culture)</td>
                 </tr>
             }
             </tbody></table>
@@ -62,14 +62,14 @@
                 else { <p>Documento emitido. La emisión de esta factura no acredita un pago.</p> }
             </div>
             <dl class="billing-totals">
-                @if (descuentos > 0) { <div><dt>Importe antes de descuentos</dt><dd>₡ @((factura.Subtotal + descuentos).ToString("N2", culture))</dd></div><div><dt>Descuentos</dt><dd>− ₡ @descuentos.ToString("N2", culture)</dd></div> }
-                <div><dt>Subtotal</dt><dd>₡ @factura.Subtotal.ToString("N2", culture)</dd></div>
-                @foreach (var impuesto in factura.Impuestos) { <div><dt>IVA (@impuesto.Porcentaje.ToString("0.##", culture)%)</dt><dd>₡ @impuesto.Monto.ToString("N2", culture)</dd></div> }
-                <div class="billing-grand-total"><dt>Total a pagar</dt><dd>₡ @factura.Total.ToString("N2", culture)</dd></div>
+                @if (descuentos > 0) { <div><dt>Importe antes de descuentos</dt><dd>₡ @((factura.Subtotal + descuentos).ToString("#,##0.##", culture))</dd></div><div><dt>Descuentos</dt><dd>− ₡ @descuentos.ToString("#,##0.##", culture)</dd></div> }
+                <div><dt>Subtotal</dt><dd>₡ @factura.Subtotal.ToString("#,##0.##", culture)</dd></div>
+                @foreach (var impuesto in factura.Impuestos) { <div><dt>IVA (@impuesto.Porcentaje.ToString("0.##", culture)%)</dt><dd>₡ @impuesto.Monto.ToString("#,##0.##", culture)</dd></div> }
+                <div class="billing-grand-total"><dt>Total a pagar</dt><dd>₡ @factura.Total.ToString("#,##0.##", culture)</dd></div>
                 @if (factura.TipoDocumento == "FACTURA" && factura.MontoPagado > 0)
                 {
-                    <div><dt>Pagos registrados</dt><dd>₡ @factura.MontoPagado.ToString("N2", culture)</dd></div>
-                    <div><dt>Saldo pendiente</dt><dd>₡ @Math.Max(0m, factura.Total - factura.MontoPagado).ToString("N2", culture)</dd></div>
+                    <div><dt>Pagos registrados</dt><dd>₡ @factura.MontoPagado.ToString("#,##0.##", culture)</dd></div>
+                    <div><dt>Saldo pendiente</dt><dd>₡ @Math.Max(0m, factura.Total - factura.MontoPagado).ToString("#,##0.##", culture)</dd></div>
                 }
             </dl>
         </div>
@@ -95,7 +95,7 @@
                 <form method="post" asp-action="AgregarProducto" asp-route-id="@factura.FacturaId" class="billing-add-product" data-billing-write>
                     <input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
                     <div><label for="productoId">Producto y precio unitario</label><select id="productoId" name="productoId" required><option value="">Seleccionar producto</option>
-                        @foreach (var producto in Model.Productos) { <option value="@producto.ProductoId">@producto.Nombre · @producto.Categoria · ₡ @producto.Precio.ToString("N2", culture)</option> }
+                        @foreach (var producto in Model.Productos) { <option value="@producto.ProductoId">@producto.Nombre · @producto.Categoria · ₡ @producto.Precio.ToString("#,##0.##", culture)</option> }
                     </select></div>
                     <div><label for="cantidad">Cantidad de unidades</label><input id="cantidad" name="cantidad" type="number" min="1" max="99999999" step="1" value="1" required /></div>
                     <button class="button" type="submit">Agregar producto</button>

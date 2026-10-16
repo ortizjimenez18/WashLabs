@@ -4,6 +4,6 @@
     <div class="product-copy">
         <p class="eyebrow">@Model.Categoria</p>
         <h3><a asp-controller="Productos" asp-action="Detalle" asp-route-id="@Model.ProductoId">@Model.Nombre</a></h3>
-        <div class="card-bottom"><strong>₡ @Model.Precio.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong><a asp-controller="Productos" asp-action="Detalle" asp-route-id="@Model.ProductoId">Ver detalle </a></div>
+        <div class="card-bottom"><strong>₡ @Model.Precio.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong><a asp-controller="Productos" asp-action="Detalle" asp-route-id="@Model.ProductoId">Ver detalle </a></div>
     </div>
 </article>

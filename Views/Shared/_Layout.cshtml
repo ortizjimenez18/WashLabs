@@ -39,6 +39,7 @@
     <footer class="site-footer"><div class="shell footer-inner"><a class="footer-brand" asp-controller="Home" asp-action="Index"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /></a><nav class="footer-links" aria-label="Enlaces del pie de página"><a asp-controller="Productos" asp-action="Index">Catálogo</a><a asp-controller="WashPoints" asp-action="Index">WashPoints</a><a asp-controller="Asistente" asp-action="Index">Asistente</a></nav><span>© @DateTime.Now.Year WashLabs · EvoGroup</span></div></footer>
     <partial name="_AsistenteWidget" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/formatos.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
