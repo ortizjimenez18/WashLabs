@@ -28,3 +28,5 @@
     @foreach (var sucursal in Model.Sucursales) { <article class="branch-card"><h3>@sucursal.Nombre</h3>@if (!string.IsNullOrWhiteSpace(sucursal.Direccion)) { <p>@sucursal.Direccion</p> }<dl class="branch-contact">@if (!string.IsNullOrWhiteSpace(sucursal.Telefono)) { <div><dt>Teléfono</dt><dd><a href="tel:@sucursal.Telefono">@sucursal.Telefono</a></dd></div> }@if (!string.IsNullOrWhiteSpace(sucursal.Correo)) { <div><dt>Correo</dt><dd><a href="mailto:@sucursal.Correo">@sucursal.Correo</a></dd></div> }</dl></article> }
     </div></section>
 }
+</div></section>
+}

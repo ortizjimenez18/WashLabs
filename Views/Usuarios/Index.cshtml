@@ -1,0 +1,35 @@
+@model IReadOnlyList<WashLabs.Models.DTOs.UsuarioDTO>
+@{ ViewData["Title"] = "Lista de Usuarios (María Paula Murillo Rosales)"; }
+@section Styles { <link rel="stylesheet" href="~/css/usuarios.css" asp-append-version="true" /> }
+<section class="shell page-heading users-heading">
+    <p class="eyebrow">WASHLABS / ADMINISTRACIÓN</p>
+    <h1>Lista de Usuarios (María Paula Murillo Rosales)</h1>
+    <p>Un directorio para consultar las personas registradas y su rol en WashLabs.</p>
+    <span class="users-count">@Model.Count usuarios registrados</span>
+</section>
+<section class="shell history-section users-directory">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><h2>No hay usuarios registrados.</h2><p>Los usuarios aparecerán aquí cuando se registren en WashLabs.</p></div>
+}
+else
+{
+    <div class="document-panel table-wrap" role="region" aria-label="Directorio de usuarios" tabindex="0">
+        <table class="invoice-lines users-table">
+            <caption>Usuarios registrados y sus roles asociados</caption>
+            <thead><tr><th scope="col">Id Usuario</th><th scope="col">Nombre del Usuario</th><th scope="col">Nombre del Rol Asociado</th><th scope="col">Correo Electrónico</th><th scope="col">Estado del Usuario</th><th scope="col">Acciones</th></tr></thead>
+            <tbody>
+            @foreach (var usuario in Model)
+            {
+                <tr data-user-id="@usuario.UsuarioId">
+                    <td>@usuario.UsuarioId</td><th scope="row">@usuario.NombreCompleto</th>
+                    <td><span class="users-role">@usuario.Rol</span></td><td>@usuario.Correo</td>
+                    <td><span class="users-status @(usuario.Activo ? "is-active" : "is-inactive")">@(usuario.Activo ? "Activo" : "Inactivo")</span></td>
+                    <td><a class="text-link users-detail-link" asp-action="Detalle" asp-route-id="@usuario.UsuarioId" aria-label="Ver detalle de @usuario.NombreCompleto">Ver detalle</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+</section>

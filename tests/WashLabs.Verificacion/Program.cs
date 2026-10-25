@@ -85,6 +85,24 @@ if (args.Contains("--http-autenticado"))
 var cadena = configuracion.GetConnectionString("WashLabsDB") ?? throw new InvalidOperationException("Configura ConnectionStrings:WashLabsDB.");
 var opciones = new DbContextOptionsBuilder<WashLabsDbContext>().UseSqlServer(cadena, s => s.UseCompatibilityLevel(150)).Options;
 await using var db = new WashLabsDbContext(opciones);
+if (args.Contains("--usuarios"))
+{
+    var servicio = new UsuarioService(new UsuarioRepository(db));
+    var lista = await servicio.ListarAsync();
+    var reales = await db.Usuarios.AsNoTracking().Include(u => u.Rol).OrderBy(u => u.UsuarioId).ToListAsync();
+    Verificar(lista.Count >= 3 && lista.Count == reales.Count, "Listado devuelve todos los usuarios de SQL Server (mínimo tres)");
+    foreach (var real in reales)
+    {
+        var dto = lista.Single(u => u.UsuarioId == real.UsuarioId);
+        Verificar(dto.NombreCompleto == real.NombreCompleto && dto.Rol == real.Rol.Nombre
+            && dto.Correo == real.Correo && dto.Activo == real.Activo, "Nombre, rol, correo y estado coinciden con SQL: " + real.UsuarioId);
+        Verificar(await servicio.ObtenerAsync(real.UsuarioId) == dto, "Detalle coincide con listado: " + real.UsuarioId);
+    }
+    Verificar(await servicio.ObtenerAsync(int.MaxValue) is null && await servicio.ObtenerAsync(0) is null
+        && await servicio.ObtenerAsync(-1) is null, "Identificadores inexistentes e inválidos no devuelven usuarios");
+    Console.WriteLine($"Total: {pruebas} comprobaciones; {lista.Count} usuarios reales; solo lectura.");
+    return;
+}
 var actores = await db.Usuarios.AsNoTracking().Include(u => u.Rol).Include(u => u.Sucursal).Where(u => u.Activo).ToListAsync();
 var facturas = new FacturaRepository(db);
 var reservas = new ReservaRepository(db);

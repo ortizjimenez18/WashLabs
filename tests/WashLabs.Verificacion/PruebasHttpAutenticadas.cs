@@ -17,6 +17,7 @@ internal static class PruebasHttpAutenticadas
             throw new InvalidOperationException("Las sesiones de prueba solo usan WashLabs_Pruebas_Avance3.");
         await using var db = new WashLabsDbContext(new DbContextOptionsBuilder<WashLabsDbContext>().UseSqlServer(cadena).Options);
         var usuarios = await db.Usuarios.Include(u => u.Rol).Where(u => u.Activo).ToListAsync();
+        var directorio = await db.Usuarios.AsNoTracking().Include(u => u.Rol).ToListAsync();
         if (usuarios.Count != 3 || usuarios.Any(u => u.Correo != u.Rol.Nombre.ToLowerInvariant() + "@example.invalid"))
             throw new InvalidOperationException("Solo se admiten las tres cuentas sintéticas creadas por el preparador.");
         var clave = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24));
@@ -54,6 +55,14 @@ internal static class PruebasHttpAutenticadas
                 if (!disponible) await Task.Delay(500);
             }
             Verificar(disponible, "Servidor HTTP sobre base aislada");
+            using (var anonimo = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = comprobacion.BaseAddress })
+            {
+                foreach (var ruta in new[] { "/Usuarios", "/Usuarios/Detalle/1" })
+                {
+                    using var respuesta = await anonimo.GetAsync(ruta);
+                    Verificar(respuesta.StatusCode == HttpStatusCode.Redirect && respuesta.Headers.Location!.ToString().Contains("/Cuenta/Entrar"), "Usuarios: anónimo requiere sesión " + ruta);
+                }
+            }
             static string Token(string html)
             {
                 var token = Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"");
@@ -69,6 +78,38 @@ internal static class PruebasHttpAutenticadas
                     ["Correo"] = usuario.Correo, ["Clave"] = clave, ["__RequestVerificationToken"] = Token(entrada) }));
                 Verificar(acceso.StatusCode == HttpStatusCode.Redirect && handler.CookieContainer.GetCookies(cliente.BaseAddress!).Cast<Cookie>()
                     .Any(c => c.Name == "WashLabs.Session"), $"Login y cookie del rol {usuario.Rol.Nombre}");
+                foreach (var ruta in new[] { "/Usuarios", "/Usuarios/Detalle/" + usuarios[0].UsuarioId })
+                {
+                    using var respuesta = await cliente.GetAsync(ruta);
+                    var esAdmin = usuario.Rol.Nombre == "Administrador";
+                    Verificar(esAdmin ? respuesta.StatusCode == HttpStatusCode.OK : respuesta.StatusCode == HttpStatusCode.Redirect
+                        && respuesta.Headers.Location!.ToString().Contains("/Cuenta/SinPermiso"), $"{usuario.Rol.Nombre}: permisos de {ruta}");
+                    if (esAdmin)
+                    {
+                        var contenido = WebUtility.HtmlDecode(await respuesta.Content.ReadAsStringAsync());
+                        Verificar(!contenido.Contains("PasswordHash") && usuarios.All(u => !contenido.Contains(u.PasswordHash)), "HTML no expone hashes");
+                        if (ruta == "/Usuarios")
+                        {
+                            Verificar(contenido.Contains("<h1>Lista de Usuarios (María Paula Murillo Rosales)</h1>")
+                                && Regex.Matches(contenido, "data-user-id=").Count == directorio.Count, "Título exacto y todos los usuarios visibles en Razor (incluye inactivos)");
+                            foreach (var registro in directorio)
+                            {
+                                var fila = Regex.Match(contenido, $"<tr data-user-id=\"{registro.UsuarioId}\">(.*?)</tr>", RegexOptions.Singleline).Value;
+                                Verificar(fila.Contains(registro.NombreCompleto) && fila.Contains(registro.Rol.Nombre)
+                                    && fila.Contains(registro.Correo) && fila.Contains(registro.Activo ? ">Activo<" : ">Inactivo<")
+                                    && fila.Contains("/Usuarios/Detalle/" + registro.UsuarioId), "Fila muestra datos y enlace reales: " + registro.UsuarioId);
+                            }
+                        }
+                        else Verificar(contenido.Contains("Volver al listado") && contenido.Contains(usuarios[0].Correo), "Detalle muestra cuenta y regreso al listado");
+                    }
+                }
+                if (usuario.Rol.Nombre == "Administrador")
+                {
+                    using var inexistente = await cliente.GetAsync("/Usuarios/Detalle/" + int.MaxValue);
+                    Verificar(inexistente.StatusCode == HttpStatusCode.NotFound, "Usuario inexistente devuelve HTTP 404");
+                    if (Environment.GetEnvironmentVariable("WASHLABS_VISUAL_TESTS") == "1")
+                        await PruebasNavegadorUsuarios.EjecutarAsync(cliente.BaseAddress!, usuario.Correo, clave, usuarios[0].UsuarioId, Verificar);
+                }
                 foreach (var ruta in new[] { "/Reservas", "/Facturacion", "/Vehiculos", "/WashPoints" })
                 {
                     using var respuesta = await cliente.GetAsync(ruta);
@@ -79,6 +120,7 @@ internal static class PruebasHttpAutenticadas
                     && mantenimiento.Headers.Location!.ToString().Contains("/Cuenta/SinPermiso") : mantenimiento.StatusCode == HttpStatusCode.OK,
                     $"{usuario.Rol.Nombre}: autorización de mantenimiento");
                 var html = await cliente.GetStringAsync("/Reservas");
+                Verificar(html.Contains("/Usuarios") == (usuario.Rol.Nombre == "Administrador"), "Menú Usuarios respeta rol " + usuario.Rol.Nombre);
                 var documento = await db.Facturas.AsNoTracking().Where(f => usuario.Rol.Nombre == "Administrador"
                     || usuario.Rol.Nombre == "Cliente" && f.ClienteId == usuario.UsuarioId
                     || usuario.Rol.Nombre == "Encargado" && f.SucursalId == usuario.SucursalId)
