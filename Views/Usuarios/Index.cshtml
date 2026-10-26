@@ -25,7 +25,8 @@ else
                     <td>@usuario.UsuarioId</td><th scope="row">@usuario.NombreCompleto</th>
                     <td><span class="users-role">@usuario.Rol</span></td><td>@usuario.Correo</td>
                     <td><span class="users-status @(usuario.Activo ? "is-active" : "is-inactive")">@(usuario.Activo ? "Activo" : "Inactivo")</span></td>
-                    <td><a class="text-link users-detail-link" asp-action="Detalle" asp-route-id="@usuario.UsuarioId" aria-label="Ver detalle de @usuario.NombreCompleto">Ver detalle</a></td>
+                    <td><a class="text-link users-detail-link" asp-action="Detalle" asp-route-id="@usuario.UsuarioId" aria-label="Ver detalle de @usuario.NombreCompleto">Ver detalle</a>
+                    @if (usuario.Activo && usuario.Rol is "Cliente" or "Encargado") { <span> · </span><a class="text-link users-detail-link" asp-action="CambiarRol" asp-route-id="@usuario.UsuarioId">Cambiar rol</a> }</td>
                 </tr>
             }
             </tbody>

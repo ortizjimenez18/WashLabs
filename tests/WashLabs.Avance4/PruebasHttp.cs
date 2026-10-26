@@ -136,6 +136,56 @@ internal static class PruebasHttp
             check(html.Contains("08:00") && html.Contains("10:00") && html.Contains("Prueba HTTP"),"HTTP: selector y ambos listados reflejan guardado");
             foreach(var route in new[]{"/Sucursales/Detalle/2147483647","/Horarios/DetalleHorario/2147483647","/Horarios/DetalleBloqueo/9223372036854775807","/Horarios?sucursalId=2147483647"})
             { using var r=await client.GetAsync(route); check(r.StatusCode==HttpStatusCode.NotFound,"HTTP: recurso inexistente devuelve 404 "+route); }
+            int rolCliente,rolEncargado,rolAdmin;
+            await using(var db=new WashLabsDbContext(options))
+            {
+                var roles=await db.Roles.ToDictionaryAsync(r=>r.Nombre,r=>(int)r.RolId);
+                rolCliente=roles["Cliente"];rolEncargado=roles["Encargado"];rolAdmin=roles["Administrador"];
+            }
+            var clave=Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24));
+            var correoRol=prefix+"rol@example.invalid";
+            html=await Get("/Cuenta/Registrarse");
+            List<KeyValuePair<string,string>> registro=[new("Nombre",prefix+"ROLHTTP"),new("Identificacion",prefix+"ROL"),new("Telefono","22223333"),new("Direccion","Verificación temporal"),new("Correo",correoRol),new("FechaNacimiento","1995-01-01"),new("Clave",clave),new("ConfirmarClave",clave),new("RolId",rolAdmin.ToString()),new("SucursalId",sede.ToString())];
+            using(var r=await Post("/Cuenta/Registrarse",registro,Token(html))) check(r.StatusCode==HttpStatusCode.Redirect,"HTTP: registro público con intento de sobreasignar rol");
+            int nuevoCliente;
+            await using(var db=new WashLabsDbContext(options))
+            {
+                var u=await db.Usuarios.AsNoTracking().SingleAsync(u=>u.Correo==correoRol);
+                nuevoCliente=u.UsuarioId;
+                check(u.RolId==rolCliente && u.SucursalId is null,"HTTP: registro ignora rol Administrador y sucursal enviados");
+            }
+            var cookieCliente=handler.CookieContainer.GetCookies(address)["WashLabs.Session"]!.Value;
+            using(var r=await client.GetAsync($"/Usuarios/CambiarRol/{nuevoCliente}"))
+                check(r.StatusCode==HttpStatusCode.Redirect && r.Headers.Location!.ToString().Contains("SinPermiso"),"HTTP: Cliente no accede al cambio de rol");
+            html=await Get("/Cuenta/Registrarse");
+            List<KeyValuePair<string,string>> Cambio(int destino)=>[new("UsuarioId",nuevoCliente.ToString()),new("RolActualId",rolCliente.ToString()),new("RolId",destino.ToString()),new("SucursalActualId","")];
+            using(var r=await Post($"/Usuarios/CambiarRol/{nuevoCliente}",Cambio(rolEncargado),Token(html)))
+                check(r.StatusCode==HttpStatusCode.Redirect && r.Headers.Location!.ToString().Contains("SinPermiso"),"HTTP: Cliente no puede enviar cambios de rol");
+            await CookieAsync(admin);
+            html=await Get($"/Usuarios/CambiarRol/{nuevoCliente}");
+            check(!Regex.IsMatch(html,$"<option[^>]*value=\"{rolAdmin}\""),"HTTP: selector de roles no ofrece Administrador");
+            using(var r=await Post($"/Usuarios/CambiarRol/{nuevoCliente}",Cambio(rolEncargado),null))
+                check(r.StatusCode==HttpStatusCode.BadRequest,"HTTP: cambio de rol exige CSRF");
+            using(var r=await Post($"/Usuarios/CambiarRol/{nuevoCliente}",Cambio(rolAdmin),Token(html)))
+                check(r.StatusCode==HttpStatusCode.OK && WebUtility.HtmlDecode(await r.Content.ReadAsStringAsync()).Contains("Solo se permite seleccionar Cliente o Encargado"),"HTTP: promoción a Administrador rechazada en backend");
+            using(var r=await Post($"/Usuarios/CambiarRol/{nuevoCliente}",Cambio(rolEncargado),Token(html)))
+                check(r.StatusCode==HttpStatusCode.Redirect,"HTTP: administrador cambia Cliente a Encargado");
+            html=await Get($"/Usuarios/Detalle/{nuevoCliente}");
+            check(html.Contains("Rol actualizado correctamente.") && html.Contains("Encargado"),"HTTP: detalle confirma nuevo rol persistido");
+            handler.CookieContainer.Add(address,new Cookie("WashLabs.Session",cookieCliente,"/"));
+            using(var r=await client.GetAsync("/Reservas"))
+                check(r.StatusCode==HttpStatusCode.Redirect && r.Headers.Location!.ToString().Contains("/Cuenta/Entrar"),"HTTP: sesión anterior revocada al cambiar el rol");
+            await CookieAsync(admin);
+            html=await Get($"/Sucursales/Editar/{sede}");
+            check(Regex.IsMatch(html,$"name=\"EncargadoIds\"[^>]*value=\"{nuevoCliente}\""),"HTTP: nuevo encargado aparece disponible para asignación");
+            fields=Fields(nombre+" editada",correo);fields[0]=new("SucursalId",sede.ToString());fields.Add(new("EncargadoIds",users[1].ToString()));fields.Add(new("EncargadoIds",nuevoCliente.ToString()));
+            using(var r=await Post($"/Sucursales/Editar/{sede}",fields,Token(html)))
+                check(r.StatusCode==HttpStatusCode.Redirect,"HTTP: asignar nuevo encargado junto a otro existente");
+            await using(var db=new WashLabsDbContext(options))
+            {
+                check(await db.Usuarios.CountAsync(u=>u.SucursalId==sede)==2,"HTTP: dos encargados persistidos en la sucursal");
+                check((await new CuentaService(new CuentaRepository(db)).IniciarAsync(correoRol,clave))?.Rol=="Encargado","HTTP: encargado asignado conserva su acceso original");
+            }
         }
         finally
         {

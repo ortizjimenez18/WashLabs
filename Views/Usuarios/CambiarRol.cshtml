@@ -1,0 +1,17 @@
+@model WashLabs.Models.ViewModels.CambiarRolFormulario
+@{ ViewData["Title"] = "Cambiar rol de usuario"; }
+@section Styles {
+    <link rel="stylesheet" href="~/css/usuarios.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" />
+}
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / USUARIOS</p><h1>Cambiar rol de usuario</h1><p>@Model.Usuario?.NombreCompleto</p></section>
+<section class="shell history-section">
+<form class="document-panel a4-form" asp-action="CambiarRol" asp-route-id="@Model.UsuarioId" method="post">
+    <input type="hidden" asp-for="UsuarioId" /><input type="hidden" asp-for="RolActualId" /><input type="hidden" asp-for="SucursalActualId" />
+    <div asp-validation-summary="All" role="alert"></div>
+    <dl class="a4-details"><dt>Correo</dt><dd>@Model.Usuario?.Correo</dd><dt>Rol actual</dt><dd>@Model.Usuario?.Rol</dd><dt>Sucursal actual</dt><dd>@(Model.Usuario?.Sucursal ?? "Sin sucursal asignada")</dd></dl>
+    <div><label asp-for="RolId"></label><select asp-for="RolId">@foreach (var rol in Model.Roles) { <option value="@rol.RolId">@rol.Nombre</option> }</select><span asp-validation-for="RolId"></span></div>
+    <p>Al cambiar el rol se retira la asignación actual de sucursal. Un nuevo encargado puede asignarse desde Sucursales. El usuario deberá iniciar sesión nuevamente.</p>
+    <div class="a4-actions"><button type="submit" class="button">Guardar rol</button><a asp-action="Detalle" asp-route-id="@Model.UsuarioId">Cancelar</a></div>
+</form>
+</section>
