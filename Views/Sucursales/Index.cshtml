@@ -1,0 +1,9 @@
+@model IReadOnlyList<WashLabs.Models.DTOs.SucursalAdministracionDTO>
+@{ ViewData["Title"] = "Sucursales"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / ADMINISTRACIÓN</p><h1>Sucursales</h1><a class="button" asp-action="Crear">Crear sucursal</a></section>
+<section class="shell history-section">
+<partial name="_Avance4Exito" />
+<div class="document-panel table-wrap"><table class="invoice-lines"><caption>Sucursales registradas</caption><thead><tr><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Encargados</th><th>Acciones</th></tr></thead><tbody>
+@foreach (var s in Model) { <tr><th>@s.Nombre</th><td>@s.Telefono</td><td>@s.Correo</td><td>@string.Join(", ", s.Encargados.Select(u => u.Nombre))</td><td><a asp-action="Detalle" asp-route-id="@s.SucursalId">Detalle</a> · <a asp-action="Editar" asp-route-id="@s.SucursalId">Editar</a></td></tr> }
+</tbody></table>@if (Model.Count == 0) { <p>No hay sucursales registradas.</p> }</div></section>

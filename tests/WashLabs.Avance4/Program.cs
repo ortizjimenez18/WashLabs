@@ -1,0 +1,64 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using WashLabs.Data.Context;
+using WashLabs.Data.Entities;
+using WashLabs.Data.Repositories;
+using WashLabs.Models.ViewModels;
+using WashLabs.Services.Implementations;
+
+var config = new ConfigurationBuilder().AddUserSecrets("84cd4722-f2f7-45ff-80bb-b95a43666266").AddEnvironmentVariables().Build();
+var options = new DbContextOptionsBuilder<WashLabsDbContext>().UseSqlServer(config.GetConnectionString("WashLabsDB"), sql => sql.UseCompatibilityLevel(150)).Options;
+var prefix = "A4-TEST-" + Guid.NewGuid().ToString("N")[..12];
+var passed = 0;
+void Check(bool ok, string name) { if (!ok) throw new Exception("FALLÓ: " + name); Console.WriteLine("APROBADA: " + name); passed++; }
+async Task<T> WithService<T>(Func<SucursalAdministracionService,Task<T>> action)
+{ await using var db = new WashLabsDbContext(options); return await action(new(new SucursalAdministracionRepository(db))); }
+SucursalFormulario Form(string suffix) => new() { Nombre = prefix + suffix, Correo = prefix + suffix + "@example.invalid", Descripcion = "Registro temporal de verificación", Direccion = "Dirección temporal de prueba", Telefono = "2222-3333" };
+var users = new List<int>();
+try
+{
+    await using (var db = new WashLabsDbContext(options))
+    {
+        var role = await db.Roles.SingleAsync(r => r.Nombre == "Encargado");
+        for (var i=0;i<3;i++)
+        {
+            var u = new Usuario { RolId = role.RolId, NombreCompleto = prefix+i, Correo = prefix+i+"@example.invalid", Telefono="22223333", Direccion="Prueba", Activo=true, PasswordHash="!SIN-ACCESO-"+Guid.NewGuid() };
+            db.Usuarios.Add(u); await db.SaveChangesAsync(); users.Add(u.UsuarioId);
+        }
+    }
+    var f=Form("A"); f.EncargadoIds=users.Take(2).ToList();
+    Check(await WithService(s=>s.GuardarAsync(f,true)) is null,"Crear sucursal con dos encargados en SQL Server");
+    var saved=(await WithService(s=>s.ListarAsync())).Single(s=>s.Nombre==f.Nombre);
+    f.SucursalId=saved.SucursalId;
+    Check(saved.Encargados.Count==2,"Listado confirma asignación múltiple persistida");
+    var preload=await WithService(s=>s.FormularioAsync(saved.SucursalId));
+    Check(preload!.EncargadoIds.Count==2 && preload.Nombre==f.Nombre,"Editar precarga valores y encargados asignados");
+    var other=Form("B"); other.EncargadoIds=[users[0]];
+    Check(await WithService(s=>s.GuardarAsync(other,true)) is not null,"Encargado ya asignado rechazado");
+    Check(!(await WithService(s=>s.FormularioAsync(null)))!.Disponibles.Any(u=>u.UsuarioId==users[0]),"Crear excluye encargados ocupados");
+    f.Nombre+=" editada"; f.EncargadoIds=[users[1],users[2]];
+    Check(await WithService(s=>s.GuardarAsync(f,false)) is null,"Editar y actualizar selección múltiple");
+    var detail=await WithService(s=>s.ObtenerAsync(saved.SucursalId));
+    Check(detail!.Nombre==f.Nombre && detail.Encargados.Select(u=>u.UsuarioId).Order().SequenceEqual(f.EncargadoIds.Order()),"Detalle refleja edición y selección");
+    Check((await WithService(s=>s.FormularioAsync(null)))!.Disponibles.Any(u=>u.UsuarioId==users[0]),"Encargado retirado vuelve a estar disponible");
+    var invalid=Form("invalida"); invalid.Correo="correo-invalido";
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Correo inválido rechazado en servicio");
+    invalid=Form("invalida"); invalid.Telefono="abc";
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Teléfono inválido rechazado en servicio");
+    invalid=Form("invalida"); invalid.EncargadoIds=[users[0],users[0]];
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"IDs duplicados rechazados");
+    invalid=Form("invalida"); invalid.EncargadoIds=[int.MaxValue];
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"ID inexistente rechazado");
+    await using (var db=new WashLabsDbContext(options))
+    {
+        Check(await db.Usuarios.CountAsync(u=>u.SucursalId==saved.SucursalId)==2,"SQL confirma exactamente dos asignaciones");
+        Check(await db.Facturas.AnyAsync() && await db.Citas.AnyAsync(),"Datos de facturación y reservas Avance 3 conservados");
+    }
+    Console.WriteLine($"Total: {passed} pruebas aprobadas.");
+}
+finally
+{
+    await using var db=new WashLabsDbContext(options);
+    await db.Usuarios.Where(u=>u.NombreCompleto.StartsWith(prefix)).ExecuteDeleteAsync();
+    await db.Sucursales.Where(s=>s.Nombre.StartsWith(prefix)).ExecuteDeleteAsync();
+}

@@ -1,0 +1,15 @@
+@model WashLabs.Models.ViewModels.SucursalFormulario
+@{ var editar = Model.SucursalId != 0; ViewData["Title"] = editar ? "Editar sucursal" : "Crear sucursal"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / SUCURSALES</p><h1>@ViewData["Title"]</h1></section>
+<section class="shell history-section"><form class="document-panel a4-form" asp-action="@(editar ? "Editar" : "Crear")" asp-route-id="@(editar ? Model.SucursalId : (int?)null)" method="post">
+<input type="hidden" asp-for="SucursalId" /><div asp-validation-summary="All" role="alert"></div>
+<div><label asp-for="Nombre"></label><input asp-for="Nombre" /><span asp-validation-for="Nombre"></span></div>
+<div><label asp-for="Descripcion"></label><textarea asp-for="Descripcion" rows="3"></textarea><span asp-validation-for="Descripcion"></span></div>
+<div><label asp-for="Telefono"></label><input asp-for="Telefono" type="tel" placeholder="2222-3333" /><span asp-validation-for="Telefono"></span></div>
+<div><label asp-for="Direccion"></label><textarea asp-for="Direccion" rows="3"></textarea><span asp-validation-for="Direccion"></span></div>
+<div><label asp-for="Correo"></label><input asp-for="Correo" type="email" /><span asp-validation-for="Correo"></span></div>
+<fieldset><legend>Usuarios encargados asignados</legend><p>Seleccione uno o varios encargados. Solo se muestran los disponibles y los asignados a esta sucursal.</p>
+@foreach (var u in Model.Disponibles) { <label class="a4-check"><input type="checkbox" name="EncargadoIds" value="@u.UsuarioId" checked="@Model.EncargadoIds.Contains(u.UsuarioId)" /> @u.Nombre @(u.Activo ? "" : "(inactivo, ya asignado)")</label> }
+@if (Model.Disponibles.Count == 0) { <p>No hay encargados disponibles.</p> }</fieldset>
+<div class="a4-actions"><button class="button" type="submit">Guardar sucursal</button><a asp-action="Index">Cancelar</a></div></form></section>

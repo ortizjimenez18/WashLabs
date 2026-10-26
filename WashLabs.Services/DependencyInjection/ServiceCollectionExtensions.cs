@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOperacionService, OperacionService>();
         services.AddScoped<ICuentaService, CuentaService>();
         services.AddScoped<IUsuarioService, UsuarioService>();
+        services.AddScoped<ISucursalAdministracionService, SucursalAdministracionService>();
         return services;
     }
 }
