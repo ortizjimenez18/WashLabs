@@ -1,7 +1,7 @@
 /* SQL Server 2019. No elimina datos ni cambia columnas/relaciones.
    Requiere un FULL COPY_ONLY con CHECKSUM y RESTORE VERIFYONLY antes de ejecutar.
    La ruta de respaldo debe ser accesible para la cuenta del servicio SQL Server.
-   No versionar respaldos. Ejecutar primero el procedimiento de docs/avance4-sebastian.md.
+   No versionar respaldos. Ejecutar primero scripts/Avance4-Sebastian.ps1 -Accion Respaldo.
    Ajustes: permitir Encargado sin sucursal; permitir duración <8h SOLO en fecha puntual.
    Se mantienen los horarios recurrentes, la numeración lunes=1/domingo=7 y sus datos.
 */
