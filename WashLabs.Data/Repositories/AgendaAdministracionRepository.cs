@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using WashLabs.Data.Context;
 using WashLabs.Data.Entities;
@@ -16,6 +17,14 @@ public sealed class AgendaAdministracionRepository(WashLabsDbContext db) : IAgen
     public Task<HorarioSucursal?> HorarioAsync(int id, CancellationToken ct) => db.HorariosSucursal.AsNoTracking().Include(h=>h.Sucursal).SingleOrDefaultAsync(h=>h.HorarioSucursalId==id,ct);
     public Task<BloqueoAgenda?> BloqueoAsync(long id, CancellationToken ct) => db.BloqueosAgenda.AsNoTracking().Include(b=>b.Sucursal).Include(b=>b.CreadoPorUsuario).SingleOrDefaultAsync(b=>b.BloqueoAgendaId==id,ct);
     public async Task<ResultadoAgendaDTO> GuardarAsync(AgendaFormulario f, int actor, Func<ContextoAgendaDTO,string?> validar, CancellationToken ct)
+    {
+        try { return await GuardarTransaccionAsync(f, actor, validar, ct); }
+        catch (SqlException ex) when (ex.Number is 1205 or 1222 or 51000)
+        { return new(null, "La agenda está siendo actualizada. Intente guardar de nuevo."); }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException sql && sql.Number is 1205 or 1222)
+        { return new(null, "La agenda está siendo actualizada. Intente guardar de nuevo."); }
+    }
+    private async Task<ResultadoAgendaDTO> GuardarTransaccionAsync(AgendaFormulario f, int actor, Func<ContextoAgendaDTO,string?> validar, CancellationToken ct)
     {
         await using var tx=await db.Database.BeginTransactionAsync(IsolationLevel.Serializable,ct);
         var recurso="WashLabs:Agenda:Sucursal:"+f.SucursalId;

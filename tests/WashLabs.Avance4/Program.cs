@@ -54,7 +54,36 @@ try
         Check(await db.Usuarios.CountAsync(u=>u.SucursalId==saved.SucursalId)==2,"SQL confirma exactamente dos asignaciones");
         Check(await db.Facturas.AnyAsync() && await db.Citas.AnyAsync(),"Datos de facturación y reservas Avance 3 conservados");
     }
+    foreach (var campo in new[] { "nombre", "descripción", "dirección" })
+    {
+        invalid=Form("requerida");
+        if(campo=="nombre") invalid.Nombre=" ";
+        if(campo=="descripción") invalid.Descripcion=" ";
+        if(campo=="dirección") invalid.Direccion=" ";
+        Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Campo obligatorio: "+campo);
+    }
+    invalid=Form("larga");invalid.Nombre=new string('N',101);
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Longitud máxima de nombre respetada");
+    invalid=Form("A");
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Correo de sucursal duplicado rechazado");
+    await using(var db=new WashLabsDbContext(options))
+    {
+        var admin=await db.Usuarios.Where(u=>u.Activo && u.Rol.Nombre=="Administrador").Select(u=>u.UsuarioId).SingleAsync();
+        invalid=Form("rol");invalid.EncargadoIds=[admin];
+        Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Otro rol no puede asignarse como encargado");
+        await db.Usuarios.Where(u=>u.UsuarioId==users[0]).ExecuteUpdateAsync(s=>s.SetProperty(u=>u.Activo,false));
+    }
+    invalid=Form("inactiva");invalid.EncargadoIds=[users[0]];
+    Check(await WithService(s=>s.GuardarAsync(invalid,true)) is not null,"Encargado inactivo rechazado");
+    Check(!(await WithService(s=>s.FormularioAsync(null)))!.Disponibles.Any(u=>u.UsuarioId==users[0]),"Crear excluye encargados inactivos");
+    await using(var db=new WashLabsDbContext(options))
+        await db.Usuarios.Where(u=>u.UsuarioId==users[0]).ExecuteUpdateAsync(s=>s.SetProperty(u=>u.Activo,true));
+    var concurrenteA=Form("ConcurrenteA");concurrenteA.EncargadoIds=[users[0]];
+    var concurrenteB=Form("ConcurrenteB");concurrenteB.EncargadoIds=[users[0]];
+    var resultados=await Task.WhenAll(WithService(s=>s.GuardarAsync(concurrenteA,true)),WithService(s=>s.GuardarAsync(concurrenteB,true)));
+    Check(resultados.Count(e=>e is null)==1,"Concurrencia SQL: un encargado se asigna a una sola sucursal");
     await PruebasAgenda.EjecutarAsync(options,saved.SucursalId,prefix,Check);
+    await PruebasHttp.EjecutarAsync(options,prefix,Check);
     Console.WriteLine($"Total: {passed} pruebas aprobadas.");
 }
 finally

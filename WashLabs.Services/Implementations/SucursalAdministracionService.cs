@@ -27,6 +27,13 @@ public sealed class SucursalAdministracionService(ISucursalAdministracionReposit
         var errores = new List<ValidationResult>();
         if (!Validator.TryValidateObject(f, new ValidationContext(f), errores, true)) return string.Join(" ", errores.Select(e => e.ErrorMessage));
         if (f.EncargadoIds is null || f.EncargadoIds.Distinct().Count() != f.EncargadoIds.Count) return "La selección de encargados no es válida.";
-        return await repo.GuardarAsync(SucursalAdministracionMapper.ToEntity(f), f.EncargadoIds, crear, ct);
+        return await repo.GuardarAsync(SucursalAdministracionMapper.ToEntity(f), f.EncargadoIds, crear, seleccion =>
+        {
+            if (seleccion.Count != f.EncargadoIds.Count || seleccion.Any(u => u.Rol != "Encargado" ||
+                (!u.Activo && (crear || u.SucursalId != f.SucursalId)) ||
+                u.SucursalId is not null && (crear || u.SucursalId != f.SucursalId)))
+                return "Uno de los encargados no existe, no está activo o ya pertenece a otra sucursal. Actualice la selección.";
+            return null;
+        }, ct);
     }
 }

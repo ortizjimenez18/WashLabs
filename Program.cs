@@ -9,7 +9,13 @@ var configurarAcceso = args.Contains("--configurar-acceso");
 var builder = WebApplication.CreateBuilder(args.Where(a => a != "--configurar-acceso").ToArray());
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.ModelBindingMessageProvider.SetAttemptedValueIsInvalidAccessor((valor, campo) => $"El valor ingresado en {campo} no es válido.");
+    options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(_ => "Este campo es obligatorio.");
+    options.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(campo => $"Ingrese un número válido en {campo}.");
+    options.ModelBindingMessageProvider.SetUnknownValueIsInvalidAccessor(campo => $"El valor ingresado en {campo} no es válido.");
+});
 builder.Services.AddWashLabsServices(builder.Configuration);
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {

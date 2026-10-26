@@ -24,6 +24,7 @@ internal static class PruebasAgenda
         var first=await Save(Form(sucursal,0,8,10));
         check(first.Error is null,"Horario válido menor de ocho horas en fecha puntual");
         check((await Save(Form(sucursal,-15,8,10))).Error!.Contains("fecha"),"Fecha anterior rechazada");
+        check((await Save(Form(sucursal,-15,8,10,true))).Error!.Contains("fecha"),"Fecha anterior rechazada para bloqueo");
         check((await Save(Form(sucursal,0,11,10))).Error!.Contains("menor"),"Horas invertidas rechazadas");
         check((await Save(Form(sucursal,0,10,10))).Error!.Contains("menor"),"Intervalo vacío rechazado");
         check((await Save(Form(sucursal,0,9,11))).Error!.Contains("otro horario"),"Horario contra horario");
@@ -35,6 +36,13 @@ internal static class PruebasAgenda
         check((await Save(Form(sucursal,0,12,14))).Error!.Contains("un bloqueo"),"Horario contra bloqueo");
         check((await Save(Form(sucursal,0,11,12,true))).Error is null,"Bloqueo contiguo a horario y a bloqueo permitido");
         check((await Save(Form(otra,0,8,10))).Error is null,"Mismo horario en diferente sucursal permitido");
+        check((await Save(Form(otra,0,12,13,true))).Error is null,"Mismo bloqueo en diferente sucursal permitido");
+        var sinFecha=Form(sucursal,1,8,10); sinFecha.Fecha=null;
+        check((await Save(sinFecha)).Error is not null,"Fecha vacía rechazada");
+        var sinHora=Form(sucursal,1,8,10); sinHora.HoraInicio=null;
+        check((await Save(sinHora)).Error is not null,"Hora vacía rechazada");
+        var segundos=Form(sucursal,1,8,10);segundos.HoraInicio=new TimeOnly(8,0,30);
+        check((await Save(segundos)).Error!.Contains("minutos"),"Segundos rechazados para evitar redondeos SQL");
         check((await Save(Form(int.MaxValue,0,8,10))).Error!.Contains("sucursal"),"Sucursal inexistente rechazada");
         check((await Save(Form(sucursal,1,8,10),int.MaxValue)).Error!.Contains("administrador"),"Actor inexistente rechazado");
         var empty=Form(sucursal,1,8,10,true); empty.Motivo=" ";

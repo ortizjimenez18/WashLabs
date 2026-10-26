@@ -32,6 +32,7 @@ public sealed class AgendaAdministracionService(IAgendaAdministracionRepository 
     }
     public static string? ValidarConflictos(AgendaFormulario f,ContextoAgendaDTO c)
     {
+        if(f.Fecha<Hoy) return "La fecha debe ser igual o posterior a la fecha actual de Costa Rica.";
         if(!c.SucursalActiva) return "La sucursal no existe o está inactiva.";
         if(!c.AdministradorActivo) return "La sesión no corresponde a un administrador activo.";
         bool Cruza(IntervaloAgendaDTO i)=>f.HoraInicio!.Value<i.Fin && i.Inicio<f.HoraFin!.Value;
