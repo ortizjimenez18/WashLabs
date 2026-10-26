@@ -1,4 +1,4 @@
-param([ValidateSet('Respaldo','Esquema','Datos','Verificar')][string]$Accion='Verificar')
+param([ValidateSet('Respaldo','Esquema','LimpiarDatos','Verificar')][string]$Accion='Verificar')
 $ErrorActionPreference='Stop'
 $repo=Split-Path -Parent $PSScriptRoot
 $cadena=$env:ConnectionStrings__WashLabsDB
@@ -25,7 +25,7 @@ RESTORE VERIFYONLY FROM DISK=@archivo WITH CHECKSUM;
 SELECT @archivo AS RespaldoVerificado;
 '@
     } else {
-        $nombre=@{Esquema='01_Esquema.sql';Datos='02_DatosPrueba.sql';Verificar='03_Verificacion.sql'}[$Accion]
+        $nombre=@{Esquema='01_Esquema.sql';LimpiarDatos='02_LimpiezaDatosPrueba.sql';Verificar='03_Verificacion.sql'}[$Accion]
         $cmd.CommandText=Get-Content -LiteralPath (Join-Path $repo "Database/Avance4/Sebastian/$nombre") -Raw -Encoding UTF8
     }
     $adaptador=New-Object System.Data.SqlClient.SqlDataAdapter($cmd)
