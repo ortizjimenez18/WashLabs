@@ -22,6 +22,7 @@
                 <details class="nav-dropdown"><summary>Mi WashLabs </summary><div class="nav-dropdown-panel">
                     @if (User.IsInRole("Administrador")) { <a asp-controller="Usuarios" asp-action="Index" aria-current="@(controller == "Usuarios" ? "page" : null)"><strong>Usuarios</strong><span>Directorio y roles asociados</span></a> }
                     @if (User.IsInRole("Administrador")) { <a asp-controller="Sucursales" asp-action="Index"><strong>Sucursales</strong><span>Mantenimiento y encargados</span></a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Horarios" asp-action="Index"><strong>Horarios y bloqueos</strong><span>Agenda por sucursal</span></a> }
                     <a asp-controller="Reservas" asp-action="Index"><strong>Reservas</strong><span>Consulta tus servicios</span></a>
                     <a asp-controller="WashPoints" asp-action="Index"><strong>WashPoints</strong><span>Tu tarjeta de lavados</span></a>
                     <a asp-controller="Vehiculos" asp-action="Index"><strong>Vehículos</strong><span>Matrículas registradas</span></a>

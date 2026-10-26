@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICuentaService, CuentaService>();
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<ISucursalAdministracionService, SucursalAdministracionService>();
+        services.AddScoped<IAgendaAdministracionService, AgendaAdministracionService>();
         return services;
     }
 }

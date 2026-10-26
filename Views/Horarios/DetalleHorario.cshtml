@@ -1,0 +1,5 @@
+@model WashLabs.Models.DTOs.HorarioAdministracionDTO
+@{ ViewData["Title"]="Detalle de horario"; string[] dias=["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / AGENDA</p><h1>Detalle de horario</h1></section>
+<section class="shell history-section"><partial name="_Avance4Exito" /><div class="document-panel a4-panel"><dl class="a4-details"><dt>Sucursal</dt><dd>@Model.Sucursal</dd><dt>Tipo</dt><dd>@(Model.Desde==Model.Hasta ? "Fecha específica" : "Recurrente")</dd><dt>Fecha inicial</dt><dd>@Model.Desde.ToString("dd/MM/yyyy")</dd><dt>Fecha final</dt><dd>@(Model.Hasta?.ToString("dd/MM/yyyy")??"Sin fecha final")</dd><dt>Día</dt><dd>@dias[Model.DiaSemana]</dd><dt>Hora inicial</dt><dd>@Model.Inicio.ToString("HH:mm")</dd><dt>Hora final</dt><dd>@Model.Fin.ToString("HH:mm")</dd><dt>Estado</dt><dd>@(Model.Activo ? "Activo" : "Inactivo")</dd></dl><a asp-action="Index" asp-route-sucursalId="@Model.SucursalId">Volver al listado</a></div></section>

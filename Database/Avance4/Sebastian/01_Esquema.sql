@@ -27,7 +27,7 @@ IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name='CK_HorariosSucursal_H
  ALTER TABLE dbo.HorariosSucursal DROP CONSTRAINT CK_HorariosSucursal_Horas;
 ALTER TABLE dbo.HorariosSucursal WITH CHECK ADD CONSTRAINT CK_HorariosSucursal_Horas
  CHECK (HoraInicio < HoraFin AND
-   (FechaVigenciaHasta=FechaVigenciaDesde OR DATEDIFF(minute,HoraInicio,HoraFin)>=480));
+   ((FechaVigenciaHasta IS NOT NULL AND FechaVigenciaHasta=FechaVigenciaDesde) OR DATEDIFF(minute,HoraInicio,HoraFin)>=480));
 COMMIT;
 SELECT name, definition, is_disabled, is_not_trusted FROM sys.check_constraints
 WHERE parent_object_id IN (OBJECT_ID('dbo.HorariosSucursal'),OBJECT_ID('dbo.Usuarios'));

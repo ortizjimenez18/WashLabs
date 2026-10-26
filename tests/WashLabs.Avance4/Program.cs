@@ -54,11 +54,14 @@ try
         Check(await db.Usuarios.CountAsync(u=>u.SucursalId==saved.SucursalId)==2,"SQL confirma exactamente dos asignaciones");
         Check(await db.Facturas.AnyAsync() && await db.Citas.AnyAsync(),"Datos de facturación y reservas Avance 3 conservados");
     }
+    await PruebasAgenda.EjecutarAsync(options,saved.SucursalId,prefix,Check);
     Console.WriteLine($"Total: {passed} pruebas aprobadas.");
 }
 finally
 {
     await using var db=new WashLabsDbContext(options);
+    await db.BloqueosAgenda.Where(b=>b.Sucursal.Nombre.StartsWith(prefix)).ExecuteDeleteAsync();
+    await db.HorariosSucursal.Where(h=>h.Sucursal.Nombre.StartsWith(prefix)).ExecuteDeleteAsync();
     await db.Usuarios.Where(u=>u.NombreCompleto.StartsWith(prefix)).ExecuteDeleteAsync();
     await db.Sucursales.Where(s=>s.Nombre.StartsWith(prefix)).ExecuteDeleteAsync();
 }

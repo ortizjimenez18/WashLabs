@@ -1,0 +1,12 @@
+@model WashLabs.Models.ViewModels.AgendaFormulario
+@{ ViewData["Title"]=Model.EsBloqueo ? "Crear bloqueo" : "Crear horario"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / AGENDA</p><h1>@ViewData["Title"]</h1></section>
+<section class="shell history-section"><form class="document-panel a4-form" asp-action="@(Model.EsBloqueo ? "CrearBloqueo" : "CrearHorario")" method="post"><div asp-validation-summary="All" role="alert"></div>
+<div><label asp-for="SucursalId"></label><select asp-for="SucursalId"><option value="">Seleccione una sucursal</option>@foreach(var s in Model.Sucursales){<option value="@s.SucursalId">@s.Nombre</option>}</select><span asp-validation-for="SucursalId"></span></div>
+<div><label asp-for="Fecha"></label><input asp-for="Fecha" type="date" /><span asp-validation-for="Fecha"></span></div>
+<div><label asp-for="HoraInicio"></label><input asp-for="HoraInicio" type="time" step="60" /><span asp-validation-for="HoraInicio"></span></div>
+<div><label asp-for="HoraFin"></label><input asp-for="HoraFin" type="time" step="60" /><span asp-validation-for="HoraFin"></span></div>
+@if(Model.EsBloqueo){<div><label asp-for="Motivo"></label><textarea asp-for="Motivo" rows="3" required maxlength="300"></textarea><span asp-validation-for="Motivo"></span></div>}
+<p>El intervalo se guardará únicamente para la fecha seleccionada. Se comprueban también los horarios recurrentes existentes.</p>
+<div class="a4-actions"><button class="button" type="submit">Guardar @(Model.EsBloqueo ? "bloqueo" : "horario")</button><a asp-action="Index" asp-route-sucursalId="@Model.SucursalId">Cancelar</a></div></form></section>
