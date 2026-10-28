@@ -1,0 +1,23 @@
+@model WashLabs.Models.ViewModels.ServicioFormulario
+@{ ViewData["Title"] = Model.ServicioId == 0 ? "Crear servicio" : "Editar servicio"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/catalogos-admin.css" asp-append-version="true" /> }
+<section class="shell history-section">
+    <h1>@ViewData["Title"]</h1>
+    <form class="document-panel a4-form catalogo-form" asp-action="@(Model.ServicioId == 0 ? "Crear" : "Editar")" asp-route-id="@(Model.ServicioId == 0 ? (int?)null : Model.ServicioId)" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <input asp-for="ServicioId" type="hidden" />
+        <div class="a4-fields">
+            <div class="col-md-6"><label asp-for="Nombre" class="form-label"></label><input asp-for="Nombre" maxlength="120" class="form-control" required /></div>
+            <div class="col-md-6"><label asp-for="TipoLavado" class="form-label">Tipo de lavado</label><input asp-for="TipoLavado" maxlength="30" class="form-control" required /></div>
+            <div class="col-12"><label asp-for="Descripcion" class="form-label">Descripción</label><textarea asp-for="Descripcion" maxlength="700" class="form-control" required></textarea></div>
+            <div class="col-md-4"><label asp-for="TarifaBase" class="form-label"></label><input asp-for="TarifaBase" type="number" min="0" step="0.01" class="form-control" required /></div>
+            <div class="col-md-4"><label asp-for="DuracionMinutos" class="form-label"></label><input asp-for="DuracionMinutos" type="number" min="1" step="1" class="form-control" required /></div>
+            <div class="col-md-4"><label asp-for="NivelDetalle" class="form-label">Nivel de detalle</label><select asp-for="NivelDetalle" class="form-select"><option value="BASICO">Básico</option><option value="INTERMEDIO">Intermedio</option><option value="PROFUNDO">Profundo</option><option value="PREMIUM">Premium</option></select></div>
+            <div class="col-12"><label for="imagen" class="form-label">Imagen del servicio</label><input id="imagen" name="imagen" type="file" accept="image/png,image/jpeg" class="form-control" /><p>PNG o JPEG, máximo 2 MB. Si no selecciona otra imagen, se conserva la actual.</p>
+                @if (Model.ImagenUrl is not null) { <img src="@Model.ImagenUrl" alt="Imagen actual" width="160" height="120" style="object-fit:contain" /> }
+            </div>
+            <div class="col-12 form-check"><input asp-for="Activo" class="form-check-input" /><label asp-for="Activo" class="form-check-label">Activo</label></div>
+        </div>
+        <p class="mt-4"><button type="submit" class="button">Guardar servicio</button> <a asp-action="Index">Cancelar</a></p>
+    </form>
+</section>

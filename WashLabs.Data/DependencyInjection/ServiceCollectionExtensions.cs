@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<WashLabsDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.UseCompatibilityLevel(150)));
         services.AddScoped<IProductoRepository, ProductoRepository>();
+        services.AddScoped<IServicioRepository, ServicioRepository>();
         services.AddScoped<IInicioRepository, InicioRepository>();
         services.AddScoped<IFacturaRepository, FacturaRepository>();
         services.AddScoped<IReservaRepository, ReservaRepository>();

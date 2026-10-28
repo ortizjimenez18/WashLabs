@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddWashLabsData(configuration);
         services.AddScoped<IProductoService, ProductoService>();
+        services.AddScoped<IServicioService, ServicioService>();
         services.AddScoped<IInicioService, InicioService>();
         services.AddScoped<IFacturaService, FacturaService>();
         services.AddScoped<IReservaService, ReservaService>();

@@ -1,0 +1,14 @@
+@model IReadOnlyList<WashLabs.Models.DTOs.ServicioAdministracionDTO>
+@{ ViewData["Title"] = "Mantenimiento de servicios"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell history-section">
+    <h1>Mantenimiento de servicios</h1>
+    @if (TempData["Exito"] is string mensaje) { <div class="a4-success" role="status">@mensaje</div> }
+    <p><a class="button" asp-action="Crear">Crear servicio</a></p>
+    <div class="document-panel table-wrap"><table class="invoice-lines"><thead><tr><th>Nombre</th><th>Tarifa</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+    @foreach (var s in Model) {
+        <tr><td>@s.Nombre</td><td>₡@s.TarifaBase.ToString("N2")</td><td>@s.DuracionMinutos minutos</td><td>@(s.Activo ? "Activo" : "Inactivo")</td><td><a asp-action="Detalle" asp-route-id="@s.ServicioId">Detalle</a> · <a asp-action="Editar" asp-route-id="@s.ServicioId">Editar</a></td></tr>
+    }
+    </tbody></table></div>
+    @if (Model.Count == 0) { <p>No hay servicios registrados.</p> }
+</section>

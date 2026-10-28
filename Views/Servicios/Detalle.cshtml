@@ -1,0 +1,10 @@
+@model WashLabs.Models.DTOs.ServicioAdministracionDTO
+@{ ViewData["Title"] = Model.Nombre; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell history-section">
+    <h1>@Model.Nombre</h1>
+    <img src="@(Model.ImagenUrl ?? "/images/productos/sin-imagen.svg")" alt="@Model.Nombre" width="280" height="210" style="object-fit:contain;max-width:100%" />
+    <dl class="a4-details"><dt>Descripción</dt><dd>@Model.Descripcion</dd><dt>Tarifa base</dt><dd>₡@Model.TarifaBase.ToString("N2")</dd><dt>Duración</dt><dd>@Model.DuracionMinutos minutos</dd><dt>Tipo de lavado</dt><dd>@Model.TipoLavado</dd><dt>Nivel de detalle</dt><dd>@Model.NivelDetalle</dd><dt>Estado</dt><dd>@(Model.Activo ? "Activo" : "Inactivo")</dd></dl>
+    <a class="button" asp-action="Editar" asp-route-id="@Model.ServicioId">Editar</a>
+    <a asp-action="Index">Volver al listado</a>
+</section>

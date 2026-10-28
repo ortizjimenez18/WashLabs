@@ -681,6 +681,7 @@ public partial class WashLabsDbContext : DbContext
 
         modelBuilder.Entity<Servicio>(entity =>
         {
+            entity.Property(e => e.ImagenUrl).HasMaxLength(500);
             entity.ToTable("Servicios", "dbo");
             entity.HasKey(e => e.ServicioId).HasName("PK_Servicios");
 

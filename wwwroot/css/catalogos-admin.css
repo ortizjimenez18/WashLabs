@@ -1,0 +1,9 @@
+.a4-fields { display:grid; gap:1.25rem; }
+.catalogo-heading { margin-bottom:1.5rem; }
+.catalogo-heading h1 { margin-bottom:1rem; }
+.catalogo-imagen { display:block; width:280px; max-width:100%; height:210px; object-fit:contain; margin:1.5rem 0; }
+.catalogo-form .a4-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.catalogo-form .col-12 { grid-column:1 / -1; }
+.catalogo-form input[type=file] { max-width:100%; }
+.catalogo-form p { margin:.5rem 0; color:var(--muted); }
+@media(max-width:640px) { .catalogo-form .a4-fields { grid-template-columns:1fr; } }

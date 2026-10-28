@@ -17,6 +17,7 @@ builder.Services.AddControllersWithViews(options =>
     options.ModelBindingMessageProvider.SetUnknownValueIsInvalidAccessor(campo => $"El valor ingresado en {campo} no es válido.");
 });
 builder.Services.AddWashLabsServices(builder.Configuration);
+builder.Services.AddScoped<WashLabs.Services.IImagenService, WashLabs.Services.ImagenService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
     options.LoginPath = "/Cuenta/Entrar";

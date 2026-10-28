@@ -5,6 +5,7 @@ namespace WashLabs.Data.Entities;
 
 public partial class Servicio
 {
+    public string? ImagenUrl { get; set; }
     public int ServicioId { get; set; }
 
     public string Nombre { get; set; } = null!;
