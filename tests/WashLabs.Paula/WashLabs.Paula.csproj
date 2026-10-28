@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../WashLabs.Services/WashLabs.Services.csproj" />
+    <Compile Include="../../Services/IImagenService.cs" Link="IImagenService.cs" />
+    <Compile Include="../../Services/ImagenService.cs" Link="ImagenService.cs" />
+    <Using Include="Microsoft.AspNetCore.Http" />
+    <Using Include="Microsoft.AspNetCore.Hosting" />
+  </ItemGroup>
+</Project>
