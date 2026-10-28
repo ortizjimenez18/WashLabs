@@ -11,7 +11,9 @@
                 <div><dt>Presentación</dt><dd>@(Model.Presentacion ?? "No especificada")</dd></div>
                 <div><dt>SKU</dt><dd>@(Model.SKU ?? "No especificado")</dd></div>
                 <div><dt>Personalizable</dt><dd>@(Model.EsPersonalizable ? "Sí" : "No")</dd></div>
-            </dl><a class="button" asp-action="@listado"> Volver al listado</a>
+            </dl>
+            @if (ViewData["Mantenimiento"] is true) { <p>Estado: @(Model.Activo ? "Activo" : "Inactivo")</p><a class="button" asp-action="Editar" asp-route-id="@Model.ProductoId">Editar producto</a> }
+            <a class="button" asp-action="@listado"> Volver al listado</a>
         </div>
     </div>
 </section>

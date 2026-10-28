@@ -7,6 +7,27 @@ namespace WashLabs.Data.Repositories;
 
 public sealed class ProductoRepository(WashLabsDbContext context) : IProductoRepository
 {
+    public async Task<IReadOnlyList<CategoriaProducto>> ListarCategoriasMantenimientoAsync(CancellationToken ct) =>
+        await context.CategoriasProducto.AsNoTracking().OrderBy(c => c.Nombre).ToListAsync(ct);
+    public Task<bool> CategoriaExisteAsync(int id, CancellationToken ct) =>
+        context.CategoriasProducto.AnyAsync(c => c.CategoriaProductoId == id, ct);
+    public Task<bool> SkuExisteAsync(string sku, int exceptoId, CancellationToken ct) =>
+        context.Productos.AnyAsync(p => p.SKU == sku && p.ProductoId != exceptoId, ct);
+    public async Task<bool> GuardarAsync(Producto producto, bool crear, CancellationToken ct)
+    {
+        if (crear) context.Productos.Add(producto);
+        else
+        {
+            var actual = await context.Productos.FindAsync([producto.ProductoId], ct);
+            if (actual is null) return false;
+            actual.Nombre = producto.Nombre; actual.Descripcion = producto.Descripcion;
+            actual.CategoriaProductoId = producto.CategoriaProductoId; actual.Precio = producto.Precio;
+            actual.Marca = producto.Marca; actual.Presentacion = producto.Presentacion;
+            actual.SKU = producto.SKU; actual.ImagenUrl = producto.ImagenUrl; actual.Activo = producto.Activo;
+        }
+        await context.SaveChangesAsync(ct);
+        return true;
+    }
     public async Task<IReadOnlyList<Producto>> ListarTodosAsync(CancellationToken cancellationToken) =>
         await context.Productos.AsNoTracking().Include(p => p.CategoriaProducto).OrderBy(p => p.Nombre).ToListAsync(cancellationToken);
 

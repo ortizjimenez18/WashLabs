@@ -1,9 +1,12 @@
 @model IReadOnlyList<WashLabs.Models.DTOs.ProductoDTO>
 @{ ViewData["Title"] = "Mantenimiento de productos"; var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR"); }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
 <section class="shell page-heading"><p class="eyebrow">WASHLABS / GESTIÓN</p><h1>Mantenimiento de productos</h1></section>
 <section class="shell history-section">
+@if (TempData["Exito"] is string mensaje) { <p class="a4-success" role="status">@mensaje</p> }
+<p><a class="button" asp-action="Crear">Crear producto</a></p>
 @if (Model.Count == 0) { <div class="empty-state"><h2>No hay productos registrados.</h2></div> }
 else { <div class="document-panel table-wrap" role="region" aria-label="Productos registrados" tabindex="0"><table class="invoice-lines"><caption>Productos registrados</caption><thead><tr><th scope="col">Producto</th><th scope="col">Categoría</th><th scope="col" class="numeric">Precio</th><th scope="col">Estado</th><th scope="col">Acción</th></tr></thead><tbody>
-@foreach (var producto in Model) { <tr><td>@producto.Nombre</td><td>@producto.Categoria</td><td class="numeric">₡ @producto.Precio.ToString("#,##0.##", culture)</td><td>@(producto.Activo ? "Activo" : "Inactivo")</td><td><a class="text-link" asp-action="DetalleMantenimiento" asp-route-id="@producto.ProductoId">Ver detalle</a></td></tr> }
+@foreach (var producto in Model) { <tr><td>@producto.Nombre</td><td>@producto.Categoria</td><td class="numeric">₡ @producto.Precio.ToString("#,##0.##", culture)</td><td>@(producto.Activo ? "Activo" : "Inactivo")</td><td><a class="text-link" asp-action="DetalleMantenimiento" asp-route-id="@producto.ProductoId">Ver detalle</a> · <a asp-action="Editar" asp-route-id="@producto.ProductoId">Editar</a></td></tr> }
 </tbody></table></div> }
 </section>
