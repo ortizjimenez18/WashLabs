@@ -1,0 +1,5 @@
+@model WashLabs.Models.DTOs.SucursalAdministracionDTO
+@{ ViewData["Title"] = "Detalle de sucursal"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / SUCURSALES</p><h1>@Model.Nombre</h1></section>
+<section class="shell history-section"><div class="document-panel a4-panel"><dl class="a4-details"><dt>Descripción</dt><dd>@Model.Descripcion</dd><dt>Teléfono</dt><dd>@Model.Telefono</dd><dt>Dirección exacta</dt><dd>@Model.Direccion</dd><dt>Correo electrónico</dt><dd>@Model.Correo</dd><dt>Estado</dt><dd>@(Model.Activa ? "Activa" : "Inactiva")</dd><dt>Encargados asignados</dt><dd>@if (Model.Encargados.Count == 0) { <span>Sin encargados asignados.</span> } else { <ul>@foreach (var u in Model.Encargados) { <li>@u.Nombre @(u.Activo ? "" : "(inactivo)")</li> }</ul> }</dd></dl><a asp-action="Editar" asp-route-id="@Model.SucursalId">Editar</a> · <a asp-action="Index">Volver al listado</a></div></section>

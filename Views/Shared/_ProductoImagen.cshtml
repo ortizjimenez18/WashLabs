@@ -1,0 +1,20 @@
+@model WashLabs.Models.DTOs.ProductoDTO
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+@{
+    var ruta = Model.ImagenUrl?.Trim();
+    var relativa = ruta?.StartsWith("~/images/", StringComparison.OrdinalIgnoreCase) == true
+        ? ruta[2..] : ruta?.StartsWith("/images/", StringComparison.OrdinalIgnoreCase) == true ? ruta[1..] : null;
+    var local = relativa is not null && !relativa.Contains("..") && !relativa.Contains('\\')
+        && Environment.WebRootFileProvider.GetFileInfo(relativa).Exists;
+}
+<div class="product-visual">
+    @if (local)
+    {
+        <img src="@Url.Content("~/" + relativa)" alt="@Model.Nombre" loading="lazy" />
+    }
+    else
+    {
+        <img class="placeholder-icon" src="~/images/productos/sin-imagen.svg" alt="Imagen no disponible de @Model.Nombre" loading="lazy" />
+        <span class="placeholder-label">Imagen no disponible</span>
+    }
+</div>

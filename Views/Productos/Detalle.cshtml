@@ -1,0 +1,17 @@
+@model WashLabs.Models.DTOs.ProductoDTO
+@{ ViewData["Title"] = Model.Nombre; var listado = ViewData["Mantenimiento"] is true ? "Mantenimiento" : "Index"; }
+<section class="shell detail-section">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación"><a asp-controller="Home" asp-action="Index">Inicio</a><span>/</span><a asp-action="@listado">Productos</a><span>/</span><span>@Model.Nombre</span></nav>
+    <div class="detail-grid"><partial name="_ProductoImagen" model="Model" />
+        <div class="detail-copy">
+            <a class="eyebrow" asp-action="Index" asp-route-categoriaId="@Model.CategoriaProductoId">@Model.Categoria </a><h1>@Model.Nombre</h1>
+            <p class="detail-price">₡ @Model.Precio.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</p><p class="description">@Model.Descripcion</p>
+            <dl class="specifications">
+                <div><dt>Marca</dt><dd>@(Model.Marca ?? "No especificada")</dd></div>
+                <div><dt>Presentación</dt><dd>@(Model.Presentacion ?? "No especificada")</dd></div>
+                <div><dt>SKU</dt><dd>@(Model.SKU ?? "No especificado")</dd></div>
+                <div><dt>Personalizable</dt><dd>@(Model.EsPersonalizable ? "Sí" : "No")</dd></div>
+            </dl><a class="button" asp-action="@listado"> Volver al listado</a>
+        </div>
+    </div>
+</section>

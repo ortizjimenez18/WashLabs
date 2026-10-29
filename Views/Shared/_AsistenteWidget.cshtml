@@ -1,0 +1,10 @@
+<div class="assistant-widget" data-categories-url="@Url.Action("Categorias", "Asistente")" data-question-url="@Url.Action("Consulta", "Asistente")">
+    <button class="assistant-launcher" type="button" aria-expanded="false" aria-controls="assistant-panel"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 3V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h6"/></svg><span>¿Te ayudamos?</span><span class="launcher-dot" aria-hidden="true"></span></button>
+    <section id="assistant-panel" class="assistant-panel" aria-label="Asistente WashLabs. Arrastra el borde para mover o usa las flechas al enfocar el panel." tabindex="0" hidden>
+        <header class="assistant-header"><div><strong>Asistente WashLabs</strong><span>Encuentra lo que necesitas</span></div><div class="assistant-controls"><button class="assistant-minimize" type="button" aria-label="Minimizar asistente" title="Minimizar">−</button><button class="assistant-close" type="button" aria-label="Cerrar asistente" title="Cerrar">×</button></div></header>
+        <div class="assistant-thread" role="log" aria-live="polite" aria-relevant="additions text"></div>
+        <div class="assistant-options" aria-label="Opciones de consulta"></div>
+        <footer class="assistant-footer"><button class="assistant-restart" type="button">Volver a los temas</button><a asp-controller="Asistente" asp-action="Index">Abrir en página completa </a></footer>
+    </section>
+    <noscript><a class="assistant-fallback" asp-controller="Asistente" asp-action="Index">Consultar asistente</a></noscript>
+</div>

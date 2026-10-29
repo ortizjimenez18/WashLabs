@@ -1,0 +1,5 @@
+@model WashLabs.Models.DTOs.BloqueoAdministracionDTO
+@{ ViewData["Title"]="Detalle de bloqueo"; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / AGENDA</p><h1>Detalle de bloqueo</h1></section>
+<section class="shell history-section"><partial name="_Avance4Exito" /><div class="document-panel a4-panel"><dl class="a4-details"><dt>Sucursal</dt><dd>@Model.Sucursal</dd><dt>Fecha</dt><dd>@Model.Fecha.ToString("dd/MM/yyyy")</dd><dt>Hora inicial</dt><dd>@(Model.DiaCompleto ? "Día completo" : Model.Inicio?.ToString("HH:mm"))</dd><dt>Hora final</dt><dd>@Model.Fin?.ToString("HH:mm")</dd><dt>Motivo</dt><dd>@Model.Motivo</dd><dt>Registrado por</dt><dd>@Model.CreadoPor</dd></dl><a asp-action="Index" asp-route-sucursalId="@Model.SucursalId">Volver al listado</a></div></section>

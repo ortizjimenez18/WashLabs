@@ -1,0 +1,7 @@
+@model WashLabs.Models.DTOs.PreguntaAsistenteDTO
+@{ ViewData["Title"] = Model.Categoria; }
+<section class="shell page-heading"><p class="eyebrow">ASISTENTE / @Model.Categoria</p><h1>@Model.Pregunta</h1></section>
+<section class="shell detail-section"><div class="document-panel assistant-answers">
+@if (Model.Opciones.Count == 0) { <p class="muted">Esta pregunta todavía no tiene opciones disponibles.</p> }
+@foreach (var opcion in Model.Opciones) { <details><summary>@opcion.Texto</summary>@if (!string.IsNullOrWhiteSpace(opcion.Respuesta)) { <p>@opcion.Respuesta</p> }@if (opcion.SiguientePreguntaId.HasValue) { <a class="text-link" asp-action="Pregunta" asp-route-id="@opcion.SiguientePreguntaId">Continuar </a> }</details> }
+</div><div class="detail-actions"><a class="button" asp-action="Index"> Volver a los temas</a></div></section>

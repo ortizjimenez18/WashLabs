@@ -1,0 +1,15 @@
+@model WashLabs.Models.ViewModels.AgendaListado
+@{ ViewData["Title"]="Horarios y bloqueos"; string[] dias=["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]; }
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / ADMINISTRACIÓN</p><h1>Horarios y bloqueos</h1></section>
+<section class="shell history-section"><partial name="_Avance4Exito" />
+<form asp-action="Index" method="get" class="a4-filter"><div><label for="SucursalId">Sucursal</label><select asp-for="SucursalId" name="sucursalId"><option value="">Seleccione una sucursal</option>@foreach(var s in Model.Sucursales){<option value="@s.SucursalId">@s.Nombre @(s.Activa ? "" : "(inactiva)")</option>}</select></div><button type="submit" class="button">Consultar</button></form>
+@if(Model.SucursalId.HasValue) {
+<div class="a4-actions"><a asp-action="CrearHorario" asp-route-sucursalId="@Model.SucursalId">Crear horario</a><a asp-action="CrearBloqueo" asp-route-sucursalId="@Model.SucursalId">Crear bloqueo</a></div>
+<h2>Horarios</h2><div class="document-panel table-wrap"><table class="invoice-lines"><caption>Horarios puntuales y recurrentes de la sucursal</caption><thead><tr><th>Tipo</th><th>Fecha / vigencia</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+@foreach(var h in Model.Horarios){<tr><td>@(h.Desde==h.Hasta ? "Fecha específica" : "Recurrente")</td><td>@h.Desde.ToString("dd/MM/yyyy") @(h.Desde==h.Hasta ? "" : " a "+(h.Hasta?.ToString("dd/MM/yyyy")??"sin fecha final"))</td><td>@dias[h.DiaSemana]</td><td>@h.Inicio.ToString("HH:mm")</td><td>@h.Fin.ToString("HH:mm")</td><td>@(h.Activo ? "Activo" : "Inactivo")</td><td><a asp-action="DetalleHorario" asp-route-id="@h.Id">Detalle</a></td></tr>}
+</tbody></table>@if(Model.Horarios.Count==0){<p>No hay horarios registrados.</p>}</div>
+<h2>Bloqueos</h2><div class="document-panel table-wrap"><table class="invoice-lines"><caption>Bloqueos registrados de la sucursal</caption><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Motivo</th><th>Acción</th></tr></thead><tbody>
+@foreach(var b in Model.Bloqueos){<tr><td>@b.Fecha.ToString("dd/MM/yyyy")</td><td>@(b.DiaCompleto ? "Día completo" : b.Inicio?.ToString("HH:mm"))</td><td>@b.Fin?.ToString("HH:mm")</td><td>@b.Motivo</td><td><a asp-action="DetalleBloqueo" asp-route-id="@b.Id">Detalle</a></td></tr>}
+</tbody></table>@if(Model.Bloqueos.Count==0){<p>No hay bloqueos registrados.</p>}</div>
+} else {<p>Seleccione una sucursal para consultar sus horarios y bloqueos.</p>}</section>

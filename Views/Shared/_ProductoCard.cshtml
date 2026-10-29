@@ -1,0 +1,9 @@
+@model WashLabs.Models.DTOs.ProductoDTO
+<article class="product-card">
+    <a class="product-image-link" asp-controller="Productos" asp-action="Detalle" asp-route-id="@Model.ProductoId" aria-label="Ver @Model.Nombre"><partial name="_ProductoImagen" model="Model" /></a>
+    <div class="product-copy">
+        <p class="eyebrow">@Model.Categoria</p>
+        <h3><a asp-controller="Productos" asp-action="Detalle" asp-route-id="@Model.ProductoId">@Model.Nombre</a></h3>
+        <div class="card-bottom"><strong>₡ @Model.Precio.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong><a asp-controller="Productos" asp-action="Detalle" asp-route-id="@Model.ProductoId">Ver detalle </a></div>
+    </div>
+</article>

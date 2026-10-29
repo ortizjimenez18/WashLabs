@@ -1,0 +1,5 @@
+@model string
+@{
+    var clase = Model switch { "Proforma" => "draft", "Pendiente" => "pending", "Completada" => "completed", "Anulada" => "cancelled", _ => "neutral" };
+}
+<span class="billing-state billing-state-@clase"><span aria-hidden="true"></span>@Model</span>

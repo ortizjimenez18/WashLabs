@@ -1,0 +1,15 @@
+﻿@model WashLabs.ViewModels.RegistroVehiculoViewModel
+@{ ViewData["Title"] = "Registrar vehículo"; }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / VEHÍCULOS</p><h1>Registrar vehículo</h1><p class="lede">Asocia una matrícula a un cliente para identificar sus servicios y lavados.</p></section>
+<section class="shell detail-section"><form asp-action="Crear" method="post" class="document-panel vehicle-form">
+<div asp-validation-summary="All" class="validation-errors" role="alert"></div>
+<div class="form-grid">
+<div><label asp-for="Vehiculo.ClienteId">Cliente</label><select asp-for="Vehiculo.ClienteId" required><option value="">Selecciona un cliente</option>@foreach (var cliente in Model.Clientes) { <option value="@cliente.ClienteId">@cliente.Nombre</option> }</select></div>
+<div><label asp-for="Vehiculo.Matricula">Matrícula</label><input asp-for="Vehiculo.Matricula" maxlength="15" required placeholder="ABC-123" /></div>
+<div><label asp-for="Vehiculo.Marca">Marca</label><input asp-for="Vehiculo.Marca" maxlength="60" required /></div>
+<div><label asp-for="Vehiculo.Modelo">Modelo</label><input asp-for="Vehiculo.Modelo" maxlength="80" required /></div>
+<div><label asp-for="Vehiculo.Anio">Año</label><input asp-for="Vehiculo.Anio" type="number" min="1950" max="2100" /></div>
+<div><label asp-for="Vehiculo.Color">Color</label><input asp-for="Vehiculo.Color" maxlength="40" /></div>
+<div><label asp-for="Vehiculo.CategoriaTamano">Tamaño</label><select asp-for="Vehiculo.CategoriaTamano"><option value="PEQUENO">Pequeño</option><option value="MEDIANO">Mediano</option><option value="GRANDE">Grande</option><option value="SUV">SUV</option><option value="PICKUP">Pick-up</option><option value="OTRO">Otro</option></select></div>
+</div><div class="detail-actions"><button class="button" type="submit">Guardar vehículo</button><a class="text-link" asp-action="Index">Volver al listado</a></div>
+</form></section>

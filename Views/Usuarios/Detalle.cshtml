@@ -1,0 +1,25 @@
+@model WashLabs.Models.DTOs.UsuarioDTO
+@{ ViewData["Title"] = "Detalle del usuario"; }
+@section Styles { <link rel="stylesheet" href="~/css/usuarios.css" asp-append-version="true" /> }
+<section class="shell page-heading users-heading">
+    <p class="eyebrow">WASHLABS / DIRECTORIO DE USUARIOS</p>
+    <h1>Detalle del usuario</h1><p>@Model.NombreCompleto</p>
+</section>
+<section class="shell history-section users-directory">
+    <partial name="_Avance4Exito" />
+    <article class="document-panel users-profile">
+        <h2>Información de la cuenta</h2>
+        <dl class="users-fields">
+            <div><dt>Id Usuario</dt><dd>@Model.UsuarioId</dd></div>
+            <div><dt>Nombre del Usuario</dt><dd>@Model.NombreCompleto</dd></div>
+            <div><dt>Nombre del Rol Asociado</dt><dd><span class="users-role">@Model.Rol</span></dd></div>
+            <div><dt>Correo Electrónico</dt><dd>@Model.Correo</dd></div>
+            <div><dt>Estado del Usuario</dt><dd><span class="users-status @(Model.Activo ? "is-active" : "is-inactive")">@(Model.Activo ? "Activo" : "Inactivo")</span></dd></div>
+            <div><dt>Teléfono</dt><dd>@Model.Telefono</dd></div>
+            <div><dt>Fecha de registro</dt><dd>@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</dd></div>
+            <div><dt>Sucursal asignada</dt><dd>@(Model.Sucursal ?? "Sin sucursal asignada")</dd></div>
+        </dl>
+        @if (Model.Activo && Model.Rol is "Cliente" or "Encargado") { <a class="text-link users-detail-link" asp-action="CambiarRol" asp-route-id="@Model.UsuarioId">Cambiar rol</a><span> · </span> }
+        <a class="text-link users-detail-link" asp-action="Index">Volver al listado</a>
+    </article>
+</section>

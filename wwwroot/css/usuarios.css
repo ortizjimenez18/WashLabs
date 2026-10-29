@@ -1,0 +1,18 @@
+.users-heading h1 { max-width: 100%; font-size: clamp(1.8rem, 3.2vw, 3rem); overflow-wrap: anywhere; }
+.users-count, .users-role { display: inline-block; padding: .4rem .8rem; border-radius: 999px; background: #e6f3f4; color: #15565d; font-weight: 700; font-size: .85rem; }
+.users-count { margin-top: .8rem; }
+.users-directory { padding-bottom: 4rem; }
+.users-table { width: 100%; }
+.users-table caption { text-align: left; padding: 1.2rem; font-weight: 700; }
+.users-table th[scope="row"] { text-align: left; font-weight: 600; font-size: inherit; letter-spacing: normal; text-transform: none; color: inherit; background: transparent; border-bottom: 1px solid var(--line); }
+.users-table td, .users-table th { vertical-align: middle; }
+.users-table tbody tr:hover { background: #f4f9f9; }
+.users-status { display: inline-block; padding: .3rem .65rem; border-radius: .4rem; font-size: .85rem; font-weight: 600; }
+.users-status.is-active { background: #e8f4e9; color: #24552b; }
+.users-status.is-inactive { background: #f1eeee; color: #614b4b; }
+.users-detail-link { display: inline-block; padding: .5rem 0; white-space: nowrap; }
+.users-profile { padding: clamp(1.2rem, 3vw, 2.5rem); max-width: 900px; }
+.users-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.users-fields dt { font-size: .85rem; color: #53636a; margin-bottom: .5rem; }
+.users-fields dd { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+@media (max-width: 640px) { .users-fields { grid-template-columns: 1fr; } .users-table { min-width: 850px; } }

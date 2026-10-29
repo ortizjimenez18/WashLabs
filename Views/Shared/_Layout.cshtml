@@ -1,48 +1,48 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@{ var controller = ViewContext.RouteData.Values["controller"]?.ToString(); }
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - WashLabs</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] · WashLabs</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/WashLabs.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/experience.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WashLabs</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - WashLabs - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+        <div class="shell header-inner">
+            <a class="brand" asp-controller="Home" asp-action="Index" aria-label="WashLabs — Inicio"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /></a>
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation"><span class="menu-lines" aria-hidden="true"></span><span>Menú</span></button>
+            <nav id="site-navigation" class="site-navigation" aria-label="Navegación principal">
+                <a asp-controller="Home" asp-action="Index" aria-current="@(controller == "Home" ? "page" : null)">Inicio</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="servicios">Servicios</a>
+                <a asp-controller="Productos" asp-action="Index" aria-current="@(controller == "Productos" ? "page" : null)">Productos</a>
+                <details class="nav-dropdown"><summary>Mi WashLabs </summary><div class="nav-dropdown-panel">
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Usuarios" asp-action="Index" aria-current="@(controller == "Usuarios" ? "page" : null)"><strong>Usuarios</strong><span>Directorio y roles asociados</span></a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Sucursales" asp-action="Index"><strong>Sucursales</strong><span>Mantenimiento y encargados</span></a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Horarios" asp-action="Index"><strong>Horarios y bloqueos</strong><span>Agenda por sucursal</span></a> }
+                    <a asp-controller="Reservas" asp-action="Index"><strong>Reservas</strong><span>Consulta tus servicios</span></a>
+                    <a asp-controller="WashPoints" asp-action="Index"><strong>WashPoints</strong><span>Tu tarjeta de lavados</span></a>
+                    <a asp-controller="Vehiculos" asp-action="Index"><strong>Vehículos</strong><span>Matrículas registradas</span></a>
+                    <a asp-controller="Facturacion" asp-action="Index"><strong>Facturación</strong><span>Historial y comprobantes</span></a>
+                    @if (User.IsInRole("Encargado") || User.IsInRole("Administrador")) { <a asp-controller="Productos" asp-action="Mantenimiento"><strong>Mantenimiento de productos</strong><span>Consulta de registros</span></a> }
+                </div></details>
+                <a class="nav-cta" asp-controller="Reservas" asp-action="Crear">Nueva reserva</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <details class="nav-dropdown"><summary><span class="nav-account-name">@User.Identity.Name</span></summary><div class="nav-dropdown-panel"><a asp-controller="Vehiculos" asp-action="Index">Mis vehículos</a><a asp-controller="WashPoints" asp-action="Index">Mi tarjeta WashPoints</a><form asp-controller="Cuenta" asp-action="Salir" method="post" class="account-logout"><button type="submit">Cerrar sesión</button></form></div></details>
+                }
+                else { <a asp-controller="Cuenta" asp-action="Entrar">Iniciar sesión</a> }
+            </nav>
         </div>
-    </footer>
+    </header>
+    <main id="contenido">@RenderBody()</main>
+    <footer class="site-footer"><div class="shell footer-inner"><a class="footer-brand" asp-controller="Home" asp-action="Index"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /></a><nav class="footer-links" aria-label="Enlaces del pie de página"><a asp-controller="Productos" asp-action="Index">Catálogo</a><a asp-controller="WashPoints" asp-action="Index">WashPoints</a><a asp-controller="Asistente" asp-action="Index">Asistente</a></nav><span>© @DateTime.Now.Year WashLabs · EvoGroup</span><div class="footer-credits"><p>Maria Paula Murillo Rosales · Sebastian Ortiz Jiménez</p><p>Curso ISW-711 PAWII</p></div></div></footer>
+    <partial name="_AsistenteWidget" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/formatos.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

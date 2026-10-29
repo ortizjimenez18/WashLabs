@@ -1,0 +1,24 @@
+@model WashLabs.ViewModels.ProductosIndexViewModel
+@{ ViewData["Title"] = "Productos"; }
+<section class="page-heading shell"><p class="eyebrow">WASHLABS / COLECCIÓN</p><h1>Productos</h1><p class="lede">Consulta el catálogo de cuidado automotriz.</p></section>
+<section class="shell catalog" aria-label="Catálogo de productos">
+    <form method="get" asp-controller="Productos" asp-action="Index" class="filters">
+        <div><label for="busqueda">Buscar producto</label><input id="busqueda" name="busqueda" type="search" value="@Model.Busqueda" placeholder="Nombre del producto" /></div>
+        <div><label for="categoriaId">Categoría</label><select id="categoriaId" name="categoriaId"><option value="">Todas las categorías</option>
+            @foreach (var categoria in Model.Categorias)
+            {
+                <option value="@categoria.CategoriaProductoId" selected="@(Model.CategoriaId == categoria.CategoriaProductoId)">@categoria.Nombre</option>
+            }
+        </select></div>
+        <button class="button" type="submit">Aplicar filtros </button><a class="text-link" asp-action="Index">Limpiar</a>
+    </form>
+    <p class="result-count" role="status">@Model.Productos.Count productos encontrados</p>
+    @if (Model.Productos.Count == 0)
+    {
+        <div class="empty-state"><h2>No encontramos productos.</h2><p>Prueba otro nombre o selecciona una categoría diferente.</p><a class="button" asp-action="Index">Ver todos los productos</a></div>
+    }
+    else
+    {
+        <div class="product-grid">@foreach (var producto in Model.Productos) { <partial name="_ProductoCard" model="producto" /> }</div>
+    }
+</section>

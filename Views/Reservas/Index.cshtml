@@ -1,0 +1,26 @@
+@model WashLabs.Models.DTOs.ReservasHistorialDTO
+@{ ViewData["Title"] = "Reservas"; }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / RESERVAS</p><h1>Reservas</h1><p class="lede">@(Model.EsCliente ? "Historial de tus reservas." : User.IsInRole("Administrador") ? "Historial de reservas de todas las sucursales." : "Historial de reservas de tu sucursal.")</p></section>
+<section class="shell history-section" aria-label="Historial de reservas">
+    <div class="reservation-actions"><a class="button" asp-action="Crear">Nueva reserva</a></div>
+    @if (!Model.EsCliente) { <div class="context-bar"><span><strong>Sucursal:</strong> @Model.Sucursal</span><span><strong>Usuario:</strong> @Model.Encargado</span></div> }
+    @if (Model.Reservas.Count == 0)
+    {
+        <div class="empty-state"><h2>No hay reservas registradas.</h2><p>Las reservas disponibles para tu usuario aparecerán aquí.</p></div>
+    }
+    else
+    {
+        <div class="record-list">
+            @foreach (var reserva in Model.Reservas)
+            {
+                <article class="record-card">
+                    <dl><dt>Fecha y hora</dt><dd>@reserva.Fecha.ToString("MM/dd/yyyy") · @reserva.HoraInicio.ToString("HH:mm")</dd></dl>
+                    <dl><dt>Cliente</dt><dd>@reserva.Cliente</dd></dl>
+                    <dl><dt>Servicio</dt><dd>@reserva.Servicio</dd></dl>
+                    <dl><dt>Estado</dt><dd><partial name="_EstadoReserva" model="reserva.Estado" /></dd></dl>
+                    <a class="record-link" asp-action="Detalle" asp-route-id="@reserva.CitaId" aria-label="Ver reserva @reserva.CitaId">Ver detalle </a>
+                </article>
+            }
+        </div>
+    }
+</section>

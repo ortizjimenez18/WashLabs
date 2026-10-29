@@ -1,0 +1,32 @@
+﻿@model WashLabs.ViewModels.CrearReservaViewModel
+@{ ViewData["Title"] = "Nueva reserva"; var formulario = Model.Formulario!; var hoy = DateOnly.FromDateTime(WashLabs.Models.DTOs.DisponibilidadReserva.Ahora); }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / RESERVAS</p><h1>Nueva reserva</h1><p class="lede">@formulario.Sucursal</p></section>
+<section class="shell detail-section">
+    <form method="get" asp-action="Crear" class="document-panel">
+        <label for="sucursalId">Sucursal</label>
+        <select id="sucursalId" name="sucursalId">@foreach (var sucursal in formulario.Sucursales) { <option value="@sucursal.SucursalId" selected="@(sucursal.SucursalId == Model.Reserva.SucursalId)">@sucursal.Nombre</option> }</select>
+        <button type="submit" class="button">Consultar sucursal</button>
+    </form>
+    @if (Model.Clientes.Count == 0 || formulario.Servicios.Count == 0) { <div class="empty-state"><h2>No hay clientes o servicios disponibles para registrar una reserva.</h2><a class="button" asp-action="Index">Volver al historial</a></div> }
+    else {
+    <form method="post" asp-action="Crear" class="document-panel booking-form" data-booking-form data-availability-url="@Url.Action("Disponibilidad", "Reservas")">
+        <div asp-validation-summary="All" class="validation-errors" role="alert"></div>
+        <input asp-for="Reserva.SucursalId" type="hidden" />
+        <div class="form-grid">
+            <div><label asp-for="Reserva.ClienteId">Cliente</label><select asp-for="Reserva.ClienteId" required><option value="">Selecciona un cliente</option>@foreach (var cliente in Model.Clientes) { <option value="@cliente.ClienteId">@cliente.Nombre</option> }</select></div>
+            <div><label asp-for="Reserva.VehiculoId">Vehículo</label><select asp-for="Reserva.VehiculoId" required><option value="">Selecciona un vehículo</option>@foreach (var vehiculo in Model.Vehiculos) { <option value="@vehiculo.VehiculoId" data-client-id="@vehiculo.ClienteId">@vehiculo.Matricula · @vehiculo.Marca @vehiculo.Modelo</option> }</select><a class="text-link form-helper" asp-controller="Vehiculos" asp-action="Crear">Registrar un vehículo</a></div>
+            <div><label asp-for="Reserva.ServicioId">Servicio</label><select asp-for="Reserva.ServicioId" required><option value="">Selecciona un servicio</option>@foreach (var servicio in formulario.Servicios) { <option value="@servicio.ServicioId">@servicio.Nombre · @servicio.DuracionMinutos min</option> }</select></div>
+            <div><label asp-for="Reserva.Fecha">Fecha</label><input asp-for="Reserva.Fecha" type="date" asp-format="{0:yyyy-MM-dd}" min="@hoy.ToString("yyyy-MM-dd")" required /></div>
+            <div><label asp-for="Reserva.HoraInicio">Hora de inicio</label><input asp-for="Reserva.HoraInicio" type="time" asp-format="{0:HH:mm}" step="60" required aria-describedby="booking-availability-status" /></div>
+        </div>
+        <div class="booking-availability"><p id="booking-availability-status" role="status">Selecciona servicio y fecha para consultar los horarios disponibles.</p><div class="booking-slots" aria-label="Horarios disponibles">@foreach (var hora in Model.Horarios) { <button class="booking-slot" type="button" data-time="@hora.ToString("HH:mm")">@hora.ToString("HH:mm")</button> }</div></div>
+        <fieldset class="booking-questions"><legend>Información para el servicio</legend>
+        @for (var i = 0; i < formulario.Preguntas.Count; i++) {
+            <div><input asp-for="Reserva.Respuestas[i].PreguntaId" type="hidden" /><label asp-for="Reserva.Respuestas[i].Respuesta">@formulario.Preguntas[i].Pregunta</label><textarea asp-for="Reserva.Respuestas[i].Respuesta" rows="2" maxlength="700" required></textarea></div>
+        }
+        </fieldset>
+        <div><label asp-for="Reserva.Observaciones">Observaciones (opcional)</label><textarea asp-for="Reserva.Observaciones" rows="3" maxlength="700"></textarea></div>
+        <div class="detail-actions"><button class="button" type="submit">Confirmar reserva</button><a class="text-link" asp-action="Index">Volver al historial</a></div>
+    </form>
+    }
+</section>
