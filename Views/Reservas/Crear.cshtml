@@ -1,4 +1,4 @@
-﻿@model WashLabs.ViewModels.CrearReservaViewModel
+@model WashLabs.ViewModels.CrearReservaViewModel
 @{ ViewData["Title"] = "Nueva reserva"; var formulario = Model.Formulario!; var hoy = DateOnly.FromDateTime(WashLabs.Models.DTOs.DisponibilidadReserva.Ahora); }
 <section class="shell page-heading"><p class="eyebrow">WASHLABS / RESERVAS</p><h1>Nueva reserva</h1><p class="lede">@formulario.Sucursal</p></section>
 <section class="shell detail-section">
@@ -15,7 +15,7 @@
         <div class="form-grid">
             <div><label asp-for="Reserva.ClienteId">Cliente</label><select asp-for="Reserva.ClienteId" required><option value="">Selecciona un cliente</option>@foreach (var cliente in Model.Clientes) { <option value="@cliente.ClienteId">@cliente.Nombre</option> }</select></div>
             <div><label asp-for="Reserva.VehiculoId">Vehículo</label><select asp-for="Reserva.VehiculoId" required><option value="">Selecciona un vehículo</option>@foreach (var vehiculo in Model.Vehiculos) { <option value="@vehiculo.VehiculoId" data-client-id="@vehiculo.ClienteId">@vehiculo.Matricula · @vehiculo.Marca @vehiculo.Modelo</option> }</select><a class="text-link form-helper" asp-controller="Vehiculos" asp-action="Crear">Registrar un vehículo</a></div>
-            <div><label asp-for="Reserva.ServicioId">Servicio</label><select asp-for="Reserva.ServicioId" required><option value="">Selecciona un servicio</option>@foreach (var servicio in formulario.Servicios) { <option value="@servicio.ServicioId">@servicio.Nombre · @servicio.DuracionMinutos min</option> }</select></div>
+            <div><label asp-for="Reserva.ServicioId">Servicio</label><select asp-for="Reserva.ServicioId" required><option value="">Selecciona un servicio</option>@foreach (var servicio in formulario.Servicios) { <option value="@servicio.ServicioId">@WashLabs.Services.Mappers.NombreCatalogo.ParaMostrar(servicio.Nombre) · @servicio.DuracionMinutos min</option> }</select></div>
             <div><label asp-for="Reserva.Fecha">Fecha</label><input asp-for="Reserva.Fecha" type="date" asp-format="{0:yyyy-MM-dd}" min="@hoy.ToString("yyyy-MM-dd")" required /></div>
             <div><label asp-for="Reserva.HoraInicio">Hora de inicio</label><input asp-for="Reserva.HoraInicio" type="time" asp-format="{0:HH:mm}" step="60" required aria-describedby="booking-availability-status" /></div>
         </div>

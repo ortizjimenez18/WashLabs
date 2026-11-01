@@ -16,10 +16,10 @@ public static partial class ReservaMapper
     }
 
     public static ReservaResumenDTO ToResumenDTO(Cita cita) => new(cita.CitaId, cita.Fecha,
-        cita.HoraInicio, cita.Cliente.NombreCompleto, cita.Servicio.Nombre, ToDTO(cita.EstadoCita));
+        cita.HoraInicio, cita.Cliente.NombreCompleto, NombreCatalogo.ParaMostrar(cita.Servicio.Nombre), ToDTO(cita.EstadoCita));
 
     public static ReservaDTO ToDTO(Cita cita) => new(cita.CitaId, cita.FechaCreacion, cita.Fecha,
-        cita.HoraInicio, cita.HoraFin, cita.Sucursal.Nombre, cita.Servicio.Nombre, ToDTO(cita.EstadoCita),
+        cita.HoraInicio, cita.HoraFin, cita.Sucursal.Nombre, NombreCatalogo.ParaMostrar(cita.Servicio.Nombre), ToDTO(cita.EstadoCita),
         cita.RespuestasReserva.OrderBy(r => r.PreguntaReserva.Orden).ThenBy(r => r.PreguntaReservaId)
             .Select(r => new RespuestaReservaDTO(r.PreguntaReserva.Pregunta, r.Respuesta)).ToArray(), cita.Vehiculo.Matricula, cita.ClienteId, cita.Facturas?.FacturaId);
 }

@@ -41,7 +41,23 @@ Verificar(ReservaMapper.ToDTO(new EstadoCita { Nombre = "Prueba", ColorHex = "ja
 
 if (args.Contains("--solo-unitarias"))
 {
+    foreach (var nombre in new[] { "Lavado exterior", "Limpieza interior", "Lavado completo", "Aromatizante", "Cera", "Microfibra" })
+        Verificar(NombreCatalogo.ParaMostrar("A4 Paula - " + nombre) == nombre, "Prefijo exacto eliminado: " + nombre);
+    foreach (var nombre in new[] { "Cera", "Edición A4 Paula - Cera", "a4 paula - Cera", "Paula - Cera", "" })
+        Verificar(NombreCatalogo.ParaMostrar(nombre) == nombre, "Otros nombres conservados: " + nombre);
+    var producto = new Producto { ProductoId = 9, Nombre = "A4 Paula - Cera", Descripcion = "Descripción original", Precio = 6500m,
+        CategoriaProducto = new CategoriaProducto { Nombre = "Ceras" } };
+    var productoDto = ProductoMapper.ToDTO(producto);
+    Verificar(productoDto.Nombre == "Cera" && productoDto.ProductoId == 9 && productoDto.Precio == 6500m
+        && productoDto.Descripcion == producto.Descripcion && producto.Nombre == "A4 Paula - Cera", "Presentación limpia sin mutar entidad, importe ni descripción");
     Console.WriteLine($"Total: {pruebas} pruebas. SQL no consultado.");
+    return;
+}
+
+if (args.Contains("--imagenes-catalogo"))
+{
+    await PruebasImagenesCatalogo.EjecutarAsync(Verificar);
+    Console.WriteLine($"Total: {pruebas} comprobaciones aprobadas. SQL no modificado.");
     return;
 }
 
@@ -85,6 +101,11 @@ if (args.Contains("--http-autenticado"))
 var cadena = configuracion.GetConnectionString("WashLabsDB") ?? throw new InvalidOperationException("Configura ConnectionStrings:WashLabsDB.");
 var opciones = new DbContextOptionsBuilder<WashLabsDbContext>().UseSqlServer(cadena, s => s.UseCompatibilityLevel(150)).Options;
 await using var db = new WashLabsDbContext(opciones);
+if (args.Contains("--presentacion"))
+{
+    await PruebasPresentacion.EjecutarAsync(db, Verificar);
+    return;
+}
 if (args.Contains("--usuarios"))
 {
     var servicio = new UsuarioService(new UsuarioRepository(db));

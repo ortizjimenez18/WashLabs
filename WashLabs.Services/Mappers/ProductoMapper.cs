@@ -15,7 +15,7 @@ public static class ProductoMapper
         Presentacion = string.IsNullOrWhiteSpace(f.Presentacion) ? null : f.Presentacion.Trim(),
         SKU = string.IsNullOrWhiteSpace(f.SKU) ? null : f.SKU.Trim(), ImagenUrl = imagen, Activo = f.Activo };
     public static ProductoDTO ToDTO(Producto producto) => new(producto.ProductoId,
-        producto.CategoriaProductoId, producto.Nombre, producto.Descripcion,
+        producto.CategoriaProductoId, NombreCatalogo.ParaMostrar(producto.Nombre), producto.Descripcion,
         producto.CategoriaProducto.Nombre, producto.Precio, producto.Marca,
         producto.Presentacion, producto.ImagenUrl, producto.EsPersonalizable, producto.SKU, producto.Activo);
 

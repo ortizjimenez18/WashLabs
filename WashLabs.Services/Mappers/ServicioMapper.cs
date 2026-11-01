@@ -6,7 +6,7 @@ namespace WashLabs.Services.Mappers;
 
 public static class ServicioMapper
 {
-    public static ServicioAdministracionDTO ToDTO(Servicio s) => new(s.ServicioId, s.Nombre, s.Descripcion, s.TarifaBase,
+    public static ServicioAdministracionDTO ToDTO(Servicio s) => new(s.ServicioId, NombreCatalogo.ParaMostrar(s.Nombre), s.Descripcion, s.TarifaBase,
         s.DuracionMinutos, s.TipoLavado, s.NivelDetalle, s.Activo, s.ImagenUrl);
     public static ServicioFormulario ToFormulario(Servicio s) => new() {
         ServicioId = s.ServicioId, Nombre = s.Nombre, Descripcion = s.Descripcion, TarifaBase = s.TarifaBase,

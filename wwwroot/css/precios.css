@@ -1,0 +1,13 @@
+:root {
+    --washlabs-price-color: #007C9E;
+    --washlabs-price-color-dark-bg: #66D9F0;
+}
+
+/* Solo importes: las etiquetas, cantidades y porcentajes conservan su color. */
+.washlabs-price {
+    color: var(--washlabs-price-color);
+}
+
+.experience-service:nth-child(2n) .washlabs-price {
+    color: var(--washlabs-price-color-dark-bg);
+}

@@ -12,7 +12,7 @@ public static class FacturaMapper
         factura.ClienteId, factura.Cliente.NombreCompleto, InicioMapper.ToDTO(factura.Sucursal),
         factura.EstadoFactura.Nombre,
         factura.DetallesFactura.OrderBy(d => d.DetalleFacturaId).Select(d => new FacturaLineaDTO(
-            d.Descripcion, d.TipoLinea == "P" ? "Producto" : "Servicio", d.PrecioUnitario,
+            NombreCatalogo.ParaMostrar(d.Descripcion), d.TipoLinea == "P" ? "Producto" : "Servicio", d.PrecioUnitario,
             d.Cantidad, d.Descuento, d.Subtotal ?? 0m, d.Impuesto ?? 0m, d.Total ?? 0m,
             d.DetalleFacturaId, d.ProductoId, d.PorcentajeImpuesto)).ToArray(),
         factura.Subtotal,
