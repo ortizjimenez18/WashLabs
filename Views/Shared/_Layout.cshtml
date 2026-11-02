@@ -20,16 +20,16 @@
                 <a asp-controller="Home" asp-action="Index" aria-current="@(controller == "Home" ? "page" : null)">Inicio</a>
                 <a asp-controller="Home" asp-action="Index" asp-fragment="servicios">Servicios</a>
                 <a asp-controller="Productos" asp-action="Index" aria-current="@(controller == "Productos" ? "page" : null)">Productos</a>
-                <details class="nav-dropdown"><summary>Mi WashLabs </summary><div class="nav-dropdown-panel">
-                    @if (User.IsInRole("Administrador")) { <a asp-controller="Usuarios" asp-action="Index" aria-current="@(controller == "Usuarios" ? "page" : null)"><strong>Usuarios</strong><span>Directorio y roles asociados</span></a> }
-                    @if (User.IsInRole("Administrador")) { <a asp-controller="Servicios" asp-action="Index"><strong>Servicios</strong><span>Mantenimiento de servicios</span></a> }
-                    @if (User.IsInRole("Administrador")) { <a asp-controller="Sucursales" asp-action="Index"><strong>Sucursales</strong><span>Mantenimiento y encargados</span></a> }
-                    @if (User.IsInRole("Administrador")) { <a asp-controller="Horarios" asp-action="Index"><strong>Horarios y bloqueos</strong><span>Agenda por sucursal</span></a> }
+                <details class="nav-dropdown nav-administracion"><summary>Mi WashLabs </summary><div class="nav-dropdown-panel">
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Usuarios" asp-action="Index" aria-current="@(controller == "Usuarios" ? "page" : null)"><strong>Mantenimiento de usuarios</strong><span>Gestión de usuarios y roles</span></a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Servicios" asp-action="Index"><strong>Mantenimiento de servicios</strong><span>Registro y edición de servicios</span></a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Sucursales" asp-action="Index"><strong>Mantenimiento de sucursales</strong><span>Gestión de sucursales y encargados</span></a> }
+                    @if (User.IsInRole("Administrador")) { <a asp-controller="Horarios" asp-action="Index"><strong>Mantenimiento de horarios y bloqueos</strong><span>Agenda y disponibilidad por sucursal</span></a> }
                     <a asp-controller="Reservas" asp-action="Index"><strong>Reservas</strong><span>Consulta tus servicios</span></a>
                     <a asp-controller="WashPoints" asp-action="Index"><strong>WashPoints</strong><span>Tu tarjeta de lavados</span></a>
-                    <a asp-controller="Vehiculos" asp-action="Index"><strong>Vehículos</strong><span>Matrículas registradas</span></a>
+                    <a asp-controller="Vehiculos" asp-action="Index"><strong>@(User.IsInRole("Administrador") || User.IsInRole("Encargado") ? "Mantenimiento de vehículos" : "Vehículos")</strong><span>@(User.IsInRole("Administrador") || User.IsInRole("Encargado") ? "Gestión de vehículos registrados" : "Matrículas registradas")</span></a>
                     <a asp-controller="Facturacion" asp-action="Index"><strong>Facturación</strong><span>Historial y comprobantes</span></a>
-                    @if (User.IsInRole("Encargado") || User.IsInRole("Administrador")) { <a asp-controller="Productos" asp-action="Mantenimiento"><strong>Mantenimiento de productos</strong><span>Consulta de registros</span></a> }
+                    @if (User.IsInRole("Encargado") || User.IsInRole("Administrador")) { <a asp-controller="Productos" asp-action="Mantenimiento"><strong>Mantenimiento de productos</strong><span>Registro y edición de productos</span></a> }
                 </div></details>
                 <a class="nav-cta" asp-controller="Reservas" asp-action="Crear">Nueva reserva</a>
                 @if (User.Identity?.IsAuthenticated == true)

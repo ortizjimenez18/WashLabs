@@ -25,6 +25,12 @@ h3 { font-family:'Segoe UI',Arial,sans-serif; letter-spacing:-.5px; }
 .nav-dropdown-panel a:hover { background:#eceef0; }
 .nav-dropdown-panel strong { display:block; font-size:16px; font-weight:650; }
 .nav-dropdown-panel a>span { display:block; font-size:14px; color:#515860; margin-top:4px; }
+.nav-administracion>.nav-dropdown-panel { width:400px; max-width:calc(100vw - 36px); max-height:calc(100dvh - 140px); overflow-y:auto; overscroll-behavior:contain; }
+.nav-administracion>.nav-dropdown-panel a { white-space:normal; overflow-wrap:anywhere; line-height:1.4; }
+@media(max-width:900px) {
+    .nav-administracion { flex-basis:100%; min-width:0; }
+    .nav-administracion>.nav-dropdown-panel { position:static; width:100%; max-width:100%; max-height:50dvh; margin-top:8px; box-sizing:border-box; }
+}
 .menu-toggle { display:none; align-items:center; gap:10px; border:1px solid #777f87; background:none; color:white; border-radius:4px; padding:11px 14px; font-size:15px; cursor:pointer; }
 .menu-lines { width:20px; height:12px; border-top:2px solid white; border-bottom:2px solid white; }
 .home-hero { position:relative; overflow:hidden; background:radial-gradient(ellipse at 78% 35%,#34383d 0,#1a1d21 30%,#141619 68%); }
