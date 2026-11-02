@@ -1,0 +1,20 @@
+@model WashLabs.Models.DTOs.ServicioDTO
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+@{
+    var ruta = Model.ImagenUrl?.Trim();
+    var relativa = ruta?.StartsWith("~/images/", StringComparison.OrdinalIgnoreCase) == true
+        ? ruta[2..] : ruta?.StartsWith("/images/", StringComparison.OrdinalIgnoreCase) == true ? ruta[1..] : null;
+    var existe = relativa is not null && !relativa.Contains("..") && !relativa.Contains('\\')
+        && Environment.WebRootFileProvider.GetFileInfo(relativa).Exists
+        && !relativa.EndsWith("sin-imagen.svg", StringComparison.OrdinalIgnoreCase);
+}
+<div class="servicio-imagen">
+    @if (existe)
+    {
+        <img src="@Url.Content("~/" + relativa)" asp-append-version="true" alt="@Model.Nombre" loading="lazy" width="900" height="600" />
+    }
+    else
+    {
+        <span class="servicio-sin-imagen">Fotografía del servicio no disponible</span>
+    }
+</div>

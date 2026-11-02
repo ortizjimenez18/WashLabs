@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using WashLabs.Services.Interfaces;
 using WashLabs.ViewModels;
@@ -27,6 +27,7 @@ public sealed class ProductosController(IProductoService productos, IImagenServi
         var actual = crear ? null : await productos.ObtenerMantenimientoAsync(f.ProductoId, ct);
         if (!crear && actual is null) return NotFound();
         f.ImagenUrl = actual?.ImagenUrl;
+        if (crear && imagen is null) ModelState.AddModelError("imagen", "Seleccione una imagen del producto.");
         string? nueva = null;
         var guardada = false;
         try

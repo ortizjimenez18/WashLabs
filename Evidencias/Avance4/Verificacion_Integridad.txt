@@ -1,0 +1,13 @@
+HorarioA    HorarioB   
+----------- -----------
+CategoriaProductoId Nombre                                                                          
+------------------- --------------------------------------------------------------------------------
+                  3 Aromatizantes                                                                   
+                  2 Ceras y selladores                                                              
+                  7 Kits                                                                            
+                  5 Llantas y plásticos                                                             
+                  4 Microfibras y accesorios                                                        
+                  1 Shampoo                                                                         
+                  6 Vidrios                                                                         
+UsuarioId  
+-----------

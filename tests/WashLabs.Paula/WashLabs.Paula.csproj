@@ -5,6 +5,7 @@
     <ProjectReference Include="../../WashLabs.Services/WashLabs.Services.csproj" />
     <Compile Include="../../Services/IImagenService.cs" Link="IImagenService.cs" />
     <Compile Include="../../Services/ImagenService.cs" Link="ImagenService.cs" />
+    <Compile Include="../WashLabs.Verificacion/NavegadorCatalogo.cs" Link="NavegadorCatalogo.cs" />
     <Using Include="Microsoft.AspNetCore.Http" />
     <Using Include="Microsoft.AspNetCore.Hosting" />
   </ItemGroup>

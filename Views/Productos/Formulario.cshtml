@@ -1,4 +1,4 @@
-@model WashLabs.Models.ViewModels.ProductoFormulario
+﻿@model WashLabs.Models.ViewModels.ProductoFormulario
 @{ ViewData["Title"] = Model.ProductoId == 0 ? "Crear producto" : "Editar producto"; }
 @section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/catalogos-admin.css" asp-append-version="true" /> }
 <section class="shell page-heading"><h1>@ViewData["Title"]</h1></section>
@@ -7,14 +7,14 @@
         <div asp-validation-summary="All" role="alert"></div>
         <input asp-for="ProductoId" type="hidden" />
         <div class="a4-fields">
-            <div><label asp-for="Nombre"></label><input asp-for="Nombre" maxlength="120" required /></div>
-            <div><label asp-for="CategoriaProductoId"></label><select asp-for="CategoriaProductoId" required><option value="">Seleccione una categoría</option>@foreach(var c in Model.Categorias) { <option value="@c.CategoriaProductoId">@c.Nombre</option> }</select></div>
-            <div class="col-12"><label asp-for="Descripcion">Descripción</label><textarea asp-for="Descripcion" maxlength="700" rows="3" required></textarea></div>
-            <div><label asp-for="Precio">Precio (₡)</label><input asp-for="Precio" type="number" min="0" step="0.01" required /></div>
-            <div><label asp-for="Marca"></label><input asp-for="Marca" maxlength="80" /></div>
-            <div><label asp-for="Presentacion"></label><input asp-for="Presentacion" maxlength="100" /></div>
-            <div><label asp-for="SKU"></label><input asp-for="SKU" maxlength="50" /></div>
-            <div class="col-12"><label for="imagen">Imagen del producto</label><input id="imagen" name="imagen" type="file" accept="image/png,image/jpeg" /><p>PNG o JPEG, máximo 2 MB. Si no selecciona otra imagen, se conserva la actual.</p>
+            <div><label asp-for="Nombre"></label><input asp-for="Nombre" maxlength="120" required /><span asp-validation-for="Nombre" class="text-danger"></span></div>
+            <div><label asp-for="CategoriaProductoId"></label><select asp-for="CategoriaProductoId" required><option value="">Seleccione una categoría</option>@foreach(var c in Model.Categorias) { <option value="@c.CategoriaProductoId">@c.Nombre</option> }</select><span asp-validation-for="CategoriaProductoId" class="text-danger"></span></div>
+            <div class="col-12"><label asp-for="Descripcion">Descripción</label><textarea asp-for="Descripcion" maxlength="700" rows="3" required></textarea><span asp-validation-for="Descripcion" class="text-danger"></span></div>
+            <div><label asp-for="Precio">Precio (₡)</label><input asp-for="Precio" type="number" min="0.01" step="0.01" required /><span asp-validation-for="Precio" class="text-danger"></span></div>
+            <div><label asp-for="Marca"></label><input asp-for="Marca" maxlength="80" /><span asp-validation-for="Marca" class="text-danger"></span></div>
+            <div><label asp-for="Presentacion"></label><input asp-for="Presentacion" maxlength="100" /><span asp-validation-for="Presentacion" class="text-danger"></span></div>
+            <div><label asp-for="SKU"></label><input asp-for="SKU" maxlength="50" /><span asp-validation-for="SKU" class="text-danger"></span></div>
+            <div class="col-12"><label for="imagen">Imagen del producto</label><input id="imagen" name="imagen" type="file" required="@(Model.ProductoId == 0)" data-imagen-selector accept="image/png,image/jpeg,image/webp" /><span class="text-danger">@Html.ValidationMessage("imagen")</span><img data-imagen-preview hidden alt="Vista previa de la imagen seleccionada" width="160" height="120" style="object-fit:contain" /><p>PNG, JPEG o WEBP, máximo 2 MB. Si no selecciona otra imagen, se conserva la actual.</p>
                 <img src="@(Model.ImagenUrl ?? "/images/productos/sin-imagen.svg")" alt="Imagen actual" width="160" height="120" style="object-fit:contain" />
             </div>
             <label class="a4-check col-12"><input asp-for="Activo" /> Activo</label>
@@ -22,3 +22,5 @@
         <div class="a4-actions"><button type="submit" class="button">Guardar producto</button><a asp-action="Mantenimiento">Cancelar</a></div>
     </form>
 </section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/imagen-formulario.js" asp-append-version="true"></script> }

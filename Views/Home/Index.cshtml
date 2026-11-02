@@ -1,5 +1,6 @@
 @model WashLabs.Models.DTOs.InicioDTO
 @{ ViewData["Title"] = "Inicio"; var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR"); }
+@section Styles { <link rel="stylesheet" href="~/css/servicios.css" asp-append-version="true" /> }
 <section class="home-hero">
     <div class="shell home-intro">
         <div class="hero-copy"><p class="eyebrow">AUTOLAVADO Y DETALLADO AUTOMOTRIZ</p><h1>El cuidado<br />que tu vehículo<br /><span>merece.</span></h1>@if (Model.Negocio is not null) { <p class="lede">@Model.Negocio.Descripcion</p> }<div class="hero-actions"><a class="button" href="#servicios">Descubrir servicios </a><a class="hero-catalog-link" asp-controller="Productos" asp-action="Index">Explorar catálogo </a></div></div>
@@ -13,7 +14,7 @@
     <div id="service-rail" class="service-rail" tabindex="0" aria-label="Servicios disponibles">
         @foreach (var servicio in Model.Servicios)
         {
-            <article class="experience-service"><span class="service-duration">@servicio.DuracionMinutos min</span><h3>@servicio.Nombre</h3><p>@servicio.Descripcion</p><div class="service-bottom"><span>Desde</span><strong class="washlabs-price">₡ @servicio.TarifaBase.ToString("#,##0.##", culture)</strong></div><a class="service-reservation" asp-controller="Reservas" asp-action="Crear" asp-route-servicioId="@servicio.ServicioId">Reservar servicio</a></article>
+            <article class="experience-service"><partial name="_ServicioImagen" model="servicio" /><span class="service-duration">@servicio.DuracionMinutos min</span><h3>@servicio.Nombre</h3><p>@servicio.Descripcion</p><div class="service-bottom"><span>Desde</span><strong class="washlabs-price">₡ @servicio.TarifaBase.ToString("#,##0.##", culture)</strong></div><a class="service-reservation" asp-controller="Reservas" asp-action="Crear" asp-route-servicioId="@servicio.ServicioId">Reservar servicio</a></article>
         }
     </div></section>
 }

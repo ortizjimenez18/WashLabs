@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using WashLabs.Data.Interfaces;
 using WashLabs.Models.DTOs;
 using WashLabs.Models.ViewModels;
@@ -36,8 +36,8 @@ public sealed class AgendaAdministracionService(IAgendaAdministracionRepository 
         if(!c.SucursalActiva) return "La sucursal no existe o está inactiva.";
         if(!c.AdministradorActivo) return "La sesión no corresponde a un administrador activo.";
         bool Cruza(IntervaloAgendaDTO i)=>f.HoraInicio!.Value<i.Fin && i.Inicio<f.HoraFin!.Value;
-        if(c.Horarios.Any(Cruza)) return f.EsBloqueo ? "El bloqueo se sobrepone con un horario de la sucursal." : "El horario se sobrepone con otro horario de la sucursal.";
-        if(c.Bloqueos.Any(Cruza)) return f.EsBloqueo ? "El bloqueo se sobrepone con otro bloqueo de la sucursal." : "El horario se sobrepone con un bloqueo de la sucursal.";
+        if(c.Horarios.Any(Cruza)) return f.EsBloqueo ? "El bloqueo seleccionado se superpone con un horario registrado para esta sucursal." : "El horario seleccionado se superpone con otro horario registrado para esta sucursal.";
+        if(c.Bloqueos.Any(Cruza)) return f.EsBloqueo ? "El bloqueo seleccionado se superpone con otro bloqueo registrado para esta sucursal." : "El horario seleccionado se superpone con un bloqueo registrado para esta sucursal.";
         if(f.EsBloqueo && c.Citas.Any(Cruza)) return "El bloqueo se sobrepone con una cita existente de la sucursal.";
         return null;
     }

@@ -1,13 +1,12 @@
-@model IReadOnlyList<WashLabs.Models.DTOs.ServicioAdministracionDTO>
+﻿@model IReadOnlyList<WashLabs.Models.DTOs.ServicioAdministracionDTO>
 @{ ViewData["Title"] = "Mantenimiento de servicios"; }
-@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
-<section class="shell history-section">
-    <h1>Mantenimiento de servicios</h1>
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/servicios.css" asp-append-version="true" /> }
+<section class="shell history-section servicios-modulo">
+    <header class="servicio-heading"><div><p class="eyebrow">ADMINISTRACIÓN</p><h1>Mantenimiento de servicios</h1></div><a class="button" asp-action="Crear">Crear servicio</a></header>
     @if (TempData["Exito"] is string mensaje) { <div class="a4-success" role="status">@mensaje</div> }
-    <p><a class="button" asp-action="Crear">Crear servicio</a></p>
-    <div class="document-panel table-wrap"><table class="invoice-lines"><thead><tr><th>Nombre</th><th>Tarifa</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+    <div class="document-panel table-wrap"><table class="invoice-lines servicio-tabla"><caption class="servicio-caption">@Model.Count servicios registrados</caption><thead><tr><th>Servicio</th><th>Tarifa</th><th>Duración</th><th>Tipo de lavado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
     @foreach (var s in Model) {
-        <tr><td>@s.Nombre</td><td class="washlabs-price">₡ @s.TarifaBase.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</td><td>@s.DuracionMinutos minutos</td><td>@(s.Activo ? "Activo" : "Inactivo")</td><td><a asp-action="Detalle" asp-route-id="@s.ServicioId">Detalle</a> · <a asp-action="Editar" asp-route-id="@s.ServicioId">Editar</a></td></tr>
+        <tr><td><div class="servicio-celda"><partial name="_ServicioImagen" model="@(new WashLabs.Models.DTOs.ServicioDTO(s.ServicioId, s.Nombre, s.Descripcion, s.TarifaBase, s.DuracionMinutos, s.ImagenUrl))" /><strong>@s.Nombre</strong></div></td><td class="washlabs-price">₡ @s.TarifaBase.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</td><td>@s.DuracionMinutos min</td><td>@s.TipoLavado</td><td><span class="servicio-estado @(s.Activo ? "es-activo" : "")">@(s.Activo ? "Activo" : "Inactivo")</span></td><td><div class="servicio-links"><a asp-action="Detalle" asp-route-id="@s.ServicioId" aria-label="Detalle de @s.Nombre">Detalle</a><a asp-action="Editar" asp-route-id="@s.ServicioId" aria-label="Editar @s.Nombre">Editar</a></div></td></tr>
     }
     </tbody></table></div>
     @if (Model.Count == 0) { <p>No hay servicios registrados.</p> }

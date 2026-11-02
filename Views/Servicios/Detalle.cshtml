@@ -1,10 +1,16 @@
-@model WashLabs.Models.DTOs.ServicioAdministracionDTO
+﻿@model WashLabs.Models.DTOs.ServicioAdministracionDTO
 @{ ViewData["Title"] = Model.Nombre; }
-@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
-<section class="shell history-section">
-    <h1>@Model.Nombre</h1>
-    <img src="@(Model.ImagenUrl ?? "/images/productos/sin-imagen.svg")" alt="@Model.Nombre" width="280" height="210" style="object-fit:contain;max-width:100%" />
-    <dl class="a4-details"><dt>Descripción</dt><dd>@Model.Descripcion</dd><dt>Tarifa base</dt><dd class="washlabs-price">₡ @Model.TarifaBase.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</dd><dt>Duración</dt><dd>@Model.DuracionMinutos minutos</dd><dt>Tipo de lavado</dt><dd>@Model.TipoLavado</dd><dt>Nivel de detalle</dt><dd>@Model.NivelDetalle</dd><dt>Estado</dt><dd>@(Model.Activo ? "Activo" : "Inactivo")</dd></dl>
-    <a class="button" asp-action="Editar" asp-route-id="@Model.ServicioId">Editar</a>
-    <a asp-action="Index">Volver al listado</a>
+@section Styles { <link rel="stylesheet" href="~/css/servicios.css" asp-append-version="true" /> }
+<section class="shell history-section servicios-modulo">
+    <nav class="servicio-breadcrumb" aria-label="Ruta de navegación"><a asp-action="Index">Servicios</a><span aria-hidden="true">/</span><span>@Model.Nombre</span></nav>
+    <header class="servicio-heading"><h1>@Model.Nombre</h1><span class="servicio-estado @(Model.Activo ? "es-activo" : "")">@(Model.Activo ? "Activo" : "Inactivo")</span></header>
+    <div class="servicio-detalle">
+        <partial name="_ServicioImagen" model="@(new WashLabs.Models.DTOs.ServicioDTO(Model.ServicioId, Model.Nombre, Model.Descripcion, Model.TarifaBase, Model.DuracionMinutos, Model.ImagenUrl))" />
+        <div class="servicio-datos"><h2>@Model.Nombre</h2><p>@Model.Descripcion</p><p class="servicio-precio">₡ @Model.TarifaBase.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</p>
+        <dl><dt>Duración</dt><dd>@Model.DuracionMinutos minutos</dd><dt>Tipo de lavado</dt><dd>@Model.TipoLavado</dd><dt>Nivel de detalle</dt><dd>@Model.NivelDetalle</dd><dt>Estado</dt><dd>@(Model.Activo ? "Activo" : "Inactivo")</dd></dl></div>
+    </div>
+    <div class="servicio-acciones">
+        @if (User.IsInRole("Administrador")) { <a class="button" asp-action="Editar" asp-route-id="@Model.ServicioId">Editar servicio</a> }
+        <a asp-action="Index">Volver al listado</a>
+    </div>
 </section>

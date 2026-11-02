@@ -1,0 +1,19 @@
+ M Controllers/ProductosController.cs
+ M Controllers/ServiciosController.cs
+ M Services/ImagenService.cs
+ M Views/Horarios/Formulario.cshtml
+ M Views/Productos/Formulario.cshtml
+ M Views/Servicios/Formulario.cshtml
+ M Views/Sucursales/Formulario.cshtml
+ M WashLabs.Models/ViewModels/ProductoFormulario.cs
+ M WashLabs.Models/ViewModels/ServicioFormulario.cs
+ M WashLabs.Services/Implementations/AgendaAdministracionService.cs
+ M docs/imagenes-productos-washlabs.md
+ D docs/prompts-imagenes-productos.md
+ M tests/WashLabs.Avance4/PruebasHttp.cs
+ M tests/WashLabs.Paula/Program.cs
+ M tests/WashLabs.Paula/PruebasHttp.cs
+ M tests/WashLabs.Paula/PruebasProductos.cs
+?? BaseDatos/
+?? Evidencias/Avance4/
+?? wwwroot/js/imagen-formulario.js

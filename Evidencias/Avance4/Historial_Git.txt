@@ -1,0 +1,10 @@
+8e6b10b | 2026-10-31 | MARIA PAULA MURILLO ROSALES | Avance 4 Paula: mejoras visuales, catalogo de productos y facturacion
+5879b7b | 2026-10-27 | MARIA PAULA MURILLO ROSALES | test(avance4): validar servicios y productos
+41b6f3f | 2026-10-27 | MARIA PAULA MURILLO ROSALES | feat(avance4): implementar mantenimiento de productos
+5530b64 | 2026-10-27 | MARIA PAULA MURILLO ROSALES | feat(avance4): implementar mantenimiento de servicios
+68f50b2 | 2026-10-25 | SEBASTIAN ORTIZ JIMENEZ | cambios en usuarios
+c4ffb82 | 2026-10-25 | SEBASTIAN ORTIZ JIMENEZ | chore: retirar datos demo del avance4
+ffb829f | 2026-10-25 | SEBASTIAN ORTIZ JIMENEZ | chore: retirar documentación del proyecto
+a35622c | 2026-10-25 | SEBASTIAN ORTIZ JIMENEZ | test(avance4): validar sucursales horarios y bloqueos
+ff65dbe | 2026-10-25 | SEBASTIAN ORTIZ JIMENEZ | feat(avance4): implementar horarios y bloqueos
+9a29802 | 2026-10-25 | SEBASTIAN ORTIZ JIMENEZ | feat(avance4): implementar mantenimiento de sucursales

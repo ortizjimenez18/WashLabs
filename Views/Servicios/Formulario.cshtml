@@ -1,23 +1,37 @@
 @model WashLabs.Models.ViewModels.ServicioFormulario
 @{ ViewData["Title"] = Model.ServicioId == 0 ? "Crear servicio" : "Editar servicio"; }
-@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/catalogos-admin.css" asp-append-version="true" /> }
-<section class="shell history-section">
+@section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/servicios.css" asp-append-version="true" /> }
+<section class="shell history-section servicios-modulo">
+    <nav class="servicio-breadcrumb" aria-label="Ruta de navegación"><a asp-action="Index">Servicios</a><span aria-hidden="true">/</span><span>@ViewData["Title"]</span></nav>
     <h1>@ViewData["Title"]</h1>
-    <form class="document-panel a4-form catalogo-form" asp-action="@(Model.ServicioId == 0 ? "Crear" : "Editar")" asp-route-id="@(Model.ServicioId == 0 ? (int?)null : Model.ServicioId)" method="post" enctype="multipart/form-data">
+    <form class="document-panel a4-form servicio-form" asp-action="@(Model.ServicioId == 0 ? "Crear" : "Editar")" asp-route-id="@(Model.ServicioId == 0 ? (int?)null : Model.ServicioId)" method="post" enctype="multipart/form-data">
         <div asp-validation-summary="All" class="text-danger" role="alert"></div>
         <input asp-for="ServicioId" type="hidden" />
-        <div class="a4-fields">
-            <div class="col-md-6"><label asp-for="Nombre" class="form-label"></label><input asp-for="Nombre" maxlength="120" class="form-control" required /></div>
-            <div class="col-md-6"><label asp-for="TipoLavado" class="form-label">Tipo de lavado</label><input asp-for="TipoLavado" maxlength="30" class="form-control" required /></div>
-            <div class="col-12"><label asp-for="Descripcion" class="form-label">Descripción</label><textarea asp-for="Descripcion" maxlength="700" class="form-control" required></textarea></div>
-            <div class="col-md-4"><label asp-for="TarifaBase" class="form-label"></label><input asp-for="TarifaBase" type="number" min="0" step="0.01" class="form-control" required /></div>
-            <div class="col-md-4"><label asp-for="DuracionMinutos" class="form-label"></label><input asp-for="DuracionMinutos" type="number" min="1" step="1" class="form-control" required /></div>
-            <div class="col-md-4"><label asp-for="NivelDetalle" class="form-label">Nivel de detalle</label><select asp-for="NivelDetalle" class="form-select"><option value="BASICO">Básico</option><option value="INTERMEDIO">Intermedio</option><option value="PROFUNDO">Profundo</option><option value="PREMIUM">Premium</option></select></div>
-            <div class="col-12"><label for="imagen" class="form-label">Imagen del servicio</label><input id="imagen" name="imagen" type="file" accept="image/png,image/jpeg" class="form-control" /><p>PNG o JPEG, máximo 2 MB. Si no selecciona otra imagen, se conserva la actual.</p>
-                @if (Model.ImagenUrl is not null) { <img src="@Model.ImagenUrl" alt="Imagen actual" width="160" height="120" style="object-fit:contain" /> }
+        <fieldset><legend>Información general</legend><div class="servicio-campos">
+            <div><label asp-for="Nombre">Nombre del servicio</label><input asp-for="Nombre" maxlength="120" required /><span asp-validation-for="Nombre"></span></div>
+            <div><label asp-for="TipoLavado">Tipo de lavado</label><select asp-for="TipoLavado" required><option value="">Seleccione un tipo</option><option value="EXTERIOR">Exterior</option><option value="INTERIOR">Interior</option><option value="COMPLETO">Completo</option><option value="PROTECCION">Protección</option></select><span asp-validation-for="TipoLavado"></span></div>
+            <div class="servicio-ancho"><label asp-for="Descripcion">Descripción</label><textarea asp-for="Descripcion" rows="3" maxlength="700" required></textarea><span asp-validation-for="Descripcion"></span></div>
+        </div></fieldset>
+        <fieldset><legend>Precio y duración</legend><div class="servicio-campos servicio-tres">
+            <div><label asp-for="TarifaBase">Tarifa en colones (₡)</label><input asp-for="TarifaBase" type="number" min="0.01" step="0.01" required /><span asp-validation-for="TarifaBase"></span></div>
+            <div><label asp-for="DuracionMinutos">Duración en minutos</label><input asp-for="DuracionMinutos" type="number" min="1" step="1" required /><span asp-validation-for="DuracionMinutos"></span></div>
+            <div><label asp-for="NivelDetalle">Nivel de detalle</label><select asp-for="NivelDetalle"><option value="BASICO">Básico</option><option value="INTERMEDIO">Intermedio</option><option value="PROFUNDO">Profundo</option><option value="PREMIUM">Premium</option></select><span asp-validation-for="NivelDetalle"></span></div>
+        </div></fieldset>
+        <fieldset><legend>Imagen del servicio</legend><div class="servicio-carga" data-servicio-carga>
+            <div class="servicio-preview">
+                <partial name="_ServicioImagen" model="@(new WashLabs.Models.DTOs.ServicioDTO(Model.ServicioId, Model.Nombre, Model.Descripcion, Model.TarifaBase, Model.DuracionMinutos, Model.ImagenUrl))" />
+                <img data-servicio-preview hidden alt="Vista previa de la imagen seleccionada" width="450" height="300" />
             </div>
-            <div class="col-12 form-check"><input asp-for="Activo" class="form-check-input" /><label asp-for="Activo" class="form-check-label">Activo</label></div>
-        </div>
-        <p class="mt-4"><button type="submit" class="button">Guardar servicio</button> <a asp-action="Index">Cancelar</a></p>
+            <div><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 4 4 3-3 5 5"/></svg>
+                <label for="imagen">Seleccionar imagen del servicio</label>
+                <div class="servicio-selector"><label class="servicio-seleccionar" for="imagen">Seleccionar o cambiar imagen</label><input id="imagen" name="imagen" type="file" required="@(Model.ServicioId == 0)" accept="image/png,image/jpeg,image/webp" aria-describedby="imagen-ayuda imagen-nombre imagen-error" /></div>
+                <p id="imagen-nombre" data-servicio-archivo aria-live="polite">@(Model.ImagenUrl is null ? "Ningún archivo seleccionado" : "Imagen actual del servicio")</p>
+                <p id="imagen-ayuda">PNG, JPG/JPEG o WEBP. Máximo 2 MB. Puede cambiar la selección antes de guardar. Al editar sin seleccionar un archivo, se conserva la imagen actual.</p>
+                <span id="imagen-error" class="field-validation-error">@Html.ValidationMessage("imagen")</span>
+            </div>
+        </div></fieldset>
+        <fieldset><legend>Disponibilidad</legend><div class="servicio-activo"><input asp-for="Activo" /><label asp-for="Activo">Activo</label></div><p class="servicio-ayuda">Los servicios inactivos no se ofrecen en el catálogo público.</p></fieldset>
+        <div class="servicio-acciones"><button type="submit" class="button">Guardar servicio</button><a class="servicio-cancelar" asp-action="Index">Cancelar</a></div>
     </form>
 </section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/servicios.js" asp-append-version="true"></script> }

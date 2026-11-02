@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Claims;
@@ -93,6 +93,59 @@ internal static class PruebasHttp
             html=await Get($"/Servicios/Editar/{id}");
             using(var r=await Post($"/Servicios/Editar/{id}",Fields(prefix+" editado",id),Token(html),true)) check(r.StatusCode==HttpStatusCode.Redirect,"HTTP: reemplazar imagen");
             await using(var db=new WashLabsDbContext(options)) { var url=await db.Servicios.Where(s=>s.ServicioId==id).Select(s=>s.ImagenUrl).SingleAsync();cargas.Add(url!);check(url!=imagenUrl,"HTTP: referencia de imagen nueva persistida"); }
+            if (Environment.GetEnvironmentVariable("WASHLABS_SERVICIOS_VISUAL") == "1")
+            {
+                var carpeta = Path.GetFullPath("artifacts/servicios");
+                Directory.CreateDirectory(carpeta);
+                await using var browser = new NavegadorCatalogo();
+                await browser.IniciarAsync(carpeta);
+                var cookie = handler.CookieContainer.GetCookies(address)["WashLabs.Session"]!;
+                await browser.ComandoAsync("Network.setCookie", new { name = cookie.Name, value = cookie.Value, url = address.ToString() });
+                foreach (var width in new[] { 1440, 390 })
+                foreach (var route in new[] { "/", "/Servicios", "/Servicios/Crear", $"/Servicios/Editar/{id}", $"/Servicios/Detalle/{id}" })
+                {
+                    await browser.ComandoAsync("Emulation.setDeviceMetricsOverride", new { width, height = 1000, deviceScaleFactor = 1, mobile = width == 390 });
+                    await browser.ComandoAsync("Page.navigate", new { url = new Uri(address, route).ToString() });
+                    for (var i=0; i<80; i++)
+                    {
+                        if ((await browser.EvaluarAsync("document.readyState === 'complete' && !!document.querySelector('main')")).GetBoolean()) break;
+                        await Task.Delay(100);
+                    }
+                    var audit = await browser.EvaluarAsync("""
+                        (async () => {
+                            const images=[...document.querySelectorAll('.servicio-imagen img')];
+                            let broken=0;
+                            for(const img of images){ img.loading='eager'; try{await img.decode();}catch{broken++;} }
+                            const checkbox=document.getElementById('Activo');
+                            return {broken, count:images.length, overflow:document.documentElement.scrollWidth>innerWidth+1,
+                                checkbox:!checkbox || (checkbox.getBoundingClientRect().width===18 && checkbox.getBoundingClientRect().height===18),
+                                detail:!document.querySelector('.servicio-detalle') || document.querySelector('.servicio-detalle .servicio-imagen').getBoundingClientRect().height<=350};
+                        })()
+                        """);
+                    check(audit.GetProperty("broken").GetInt32()==0 && audit.GetProperty("checkbox").GetBoolean()
+                        && audit.GetProperty("detail").GetBoolean() && !audit.GetProperty("overflow").GetBoolean(), $"Edge: {route} a {width}px, imágenes válidas, checkbox proporcionado, sin desbordamiento");
+                    if (route == "/Servicios/Crear")
+                    {
+                        await browser.ComandoAsync("DOM.enable", new { });
+                        var document = await browser.ComandoAsync("DOM.getDocument", new { });
+                        var node = await browser.ComandoAsync("DOM.querySelector", new { nodeId=document.GetProperty("root").GetProperty("nodeId").GetInt32(), selector="#imagen" });
+                        foreach(var asset in new[]{"wash-express.jpg","lavado-completo.jpg"})
+                        {
+                            await browser.ComandoAsync("DOM.setFileInputFiles", new { nodeId=node.GetProperty("nodeId").GetInt32(), files=new[]{Path.GetFullPath("wwwroot/images/servicios/"+asset)} });
+                            var previewOk = false;
+                            for(var i=0;i<40 && !previewOk;i++)
+                            {
+                                previewOk=(await browser.EvaluarAsync("(() => { const img=document.querySelector('[data-servicio-preview]'); return !img.hidden && img.naturalWidth>0 && document.querySelector('[data-servicio-archivo]').textContent===document.getElementById('imagen').files[0].name; })()")).GetBoolean();
+                                if(!previewOk) await Task.Delay(100);
+                            }
+                            check(previewOk,$"Edge: vista previa y cambio de selección {asset} a {width}px");
+                        }
+                    }
+                    var screenshot = await browser.ComandoAsync("Page.captureScreenshot", new { format="png", captureBeyondViewport=true });
+                    var filename = route=="/" ? "inicio" : route.Trim('/').Replace('/','-');
+                    await File.WriteAllBytesAsync(Path.Combine(carpeta, $"{filename}-{width}.png"), Convert.FromBase64String(screenshot.GetProperty("data").GetString()!));
+                }
+            }
             if(productos)
             {
                 int categoria;
@@ -101,9 +154,9 @@ internal static class PruebasHttp
                 html=await Get("/Productos/Crear");check(html.Contains($"value=\"{categoria}\""),"HTTP: selector de categorías desde SQL");
                 using(var r=await Post("/Productos/Crear",ProductFields(),null)) check(r.StatusCode==HttpStatusCode.BadRequest,"HTTP: productos requieren CSRF");
                 invalid=ProductFields();invalid.RemoveAll(f=>f.Key=="Precio");invalid.Add(new("Precio","-1"));
-                using(var r=await Post("/Productos/Crear",invalid,Token(html))) check(r.StatusCode==HttpStatusCode.OK && (await r.Content.ReadAsStringAsync()).Contains("mayor o igual a cero"),"HTTP: precio negativo muestra mensaje");
+                using(var r=await Post("/Productos/Crear",invalid,Token(html),true)) check(r.StatusCode==HttpStatusCode.OK && (await r.Content.ReadAsStringAsync()).Contains("mayor que cero"),"HTTP: precio negativo muestra mensaje");
                 invalid=ProductFields();invalid.RemoveAll(f=>f.Key=="CategoriaProductoId");invalid.Add(new("CategoriaProductoId",int.MaxValue.ToString()));
-                using(var r=await Post("/Productos/Crear",invalid,Token(html))) check(r.StatusCode==HttpStatusCode.OK && (await r.Content.ReadAsStringAsync()).Contains("no existe"),"HTTP: categoría manipulada rechazada");
+                using(var r=await Post("/Productos/Crear",invalid,Token(html),true)) check(r.StatusCode==HttpStatusCode.OK && (await r.Content.ReadAsStringAsync()).Contains("no existe"),"HTTP: categoría manipulada rechazada");
                 using(var r=await Post("/Productos/Crear",ProductFields(),Token(html),true)) check(r.StatusCode==HttpStatusCode.Redirect,"HTTP: crear producto con imagen");
                 int productId;
                 await using(var db=new WashLabsDbContext(options)) { var p=await db.Productos.SingleAsync(p=>p.SKU==prefix);productId=p.ProductoId;imagenUrl=p.ImagenUrl;cargas.Add(imagenUrl!); }
@@ -116,7 +169,7 @@ internal static class PruebasHttp
                 using(var r=await Post($"/Productos/Editar/{productId}",ProductFields(productId),Token(html),true)) check(r.StatusCode==HttpStatusCode.Redirect,"HTTP: reemplazar imagen de producto");
                 await using(var db=new WashLabsDbContext(options)) { var url=await db.Productos.Where(p=>p.ProductoId==productId).Select(p=>p.ImagenUrl).SingleAsync();cargas.Add(url!);check(url!=imagenUrl,"HTTP: imagen de producto reemplazada persistida"); }
                 html=await Get("/Productos/Crear");
-                using(var r=await Post("/Productos/Crear",ProductFields(),Token(html))) check(r.StatusCode==HttpStatusCode.OK && (await r.Content.ReadAsStringAsync()).Contains("ese SKU"),"HTTP: SKU duplicado muestra mensaje");
+                using(var r=await Post("/Productos/Crear",ProductFields(),Token(html),true)) check(r.StatusCode==HttpStatusCode.OK && (await r.Content.ReadAsStringAsync()).Contains("ese SKU"),"HTTP: SKU duplicado muestra mensaje");
                 await Cookie("Cliente");
                 foreach(var route in new[]{"/Productos/Crear","/Productos/Editar/"+productId,"/Productos/Mantenimiento"})
                 { using var r=await client.GetAsync(route);check(r.StatusCode==HttpStatusCode.Redirect && r.Headers.Location!.ToString().Contains("SinPermiso"),"HTTP: cliente sin permiso " + route); }

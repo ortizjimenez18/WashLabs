@@ -1,4 +1,4 @@
-@model WashLabs.Models.ViewModels.SucursalFormulario
+﻿@model WashLabs.Models.ViewModels.SucursalFormulario
 @{ var editar = Model.SucursalId != 0; ViewData["Title"] = editar ? "Editar sucursal" : "Crear sucursal"; }
 @section Styles { <link rel="stylesheet" href="~/css/avance4.css" asp-append-version="true" /> }
 <section class="shell page-heading"><p class="eyebrow">WASHLABS / SUCURSALES</p><h1>@ViewData["Title"]</h1></section>
@@ -13,3 +13,5 @@
 @foreach (var u in Model.Disponibles) { <label class="a4-check"><input type="checkbox" name="EncargadoIds" value="@u.UsuarioId" checked="@Model.EncargadoIds.Contains(u.UsuarioId)" /> @u.Nombre @(u.Activo ? "" : "(inactivo, ya asignado)")</label> }
 @if (Model.Disponibles.Count == 0) { <p>No hay encargados disponibles.</p> }</fieldset>
 <div class="a4-actions"><button class="button" type="submit">Guardar sucursal</button><a asp-action="Index">Cancelar</a></div></form></section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

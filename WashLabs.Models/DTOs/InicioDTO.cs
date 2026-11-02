@@ -1,7 +1,7 @@
 namespace WashLabs.Models.DTOs;
 
 public sealed record ServicioDTO(int ServicioId, string Nombre, string Descripcion,
-    decimal TarifaBase, int DuracionMinutos);
+    decimal TarifaBase, int DuracionMinutos, string? ImagenUrl = null);
 public sealed record SucursalDTO(int SucursalId, string Nombre, string Descripcion,
     string Direccion, string Telefono, string Correo);
 public sealed record NegocioDTO(string Nombre, string Descripcion);

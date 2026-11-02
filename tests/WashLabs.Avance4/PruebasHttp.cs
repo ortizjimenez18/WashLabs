@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Claims;
@@ -125,7 +125,7 @@ internal static class PruebasHttp
             }
             html=await Get($"/Horarios/CrearBloqueo?sucursalId={sede}");
             using(var r=await Post("/Horarios/CrearBloqueo",Agenda("09:00","11:00"),Token(html)))
-            { var body=WebUtility.HtmlDecode(await r.Content.ReadAsStringAsync()); check(r.StatusCode==HttpStatusCode.OK && body.Contains("bloqueo se sobrepone con un horario"),"HTTP: conflicto exacto visible al usuario"); }
+            { var body=WebUtility.HtmlDecode(await r.Content.ReadAsStringAsync()); check(r.StatusCode==HttpStatusCode.OK && body.Contains("bloqueo seleccionado se superpone con un horario registrado para esta sucursal."),"HTTP: conflicto exacto visible al usuario"); }
             using(var r=await Post("/Horarios/CrearHorario",Agenda("12:00","13:00"),null)) check(r.StatusCode==HttpStatusCode.BadRequest,"HTTP: horario rechaza POST sin CSRF");
             using(var r=await Post("/Horarios/CrearBloqueo",Agenda("12:00","13:00"),null)) check(r.StatusCode==HttpStatusCode.BadRequest,"HTTP: bloqueo rechaza POST sin CSRF");
             html=await Get($"/Horarios/CrearHorario?sucursalId={sede}");

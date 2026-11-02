@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WashLabs.Data.Context;
 using WashLabs.Data.Repositories;
 using WashLabs.Models.ViewModels;
@@ -19,14 +19,14 @@ internal static class PruebasProductos
         var saved = (await service.ListarTodosAsync()).Single(p=>p.SKU==prefix);
         var preload = await service.FormularioAsync(saved.ProductoId);
         check(preload!.Nombre==form.Nombre && preload.Descripcion==form.Descripcion && preload.Precio==2999.50m && preload.Marca=="WashLabs" && preload.Presentacion=="500 ml" && preload.CategoriaProductoId==form.CategoriaProductoId,"Productos: precarga completa");
-        preload.Nombre += " editado"; preload.Precio=0;
-        check(await service.GuardarAsync(preload,false,null) is null,"Productos: editar con precio cero y mismo SKU");
+        preload.Nombre += " editado"; preload.Precio=1;
+        check(await service.GuardarAsync(preload,false,null) is null,"Productos: editar con precio positivo y mismo SKU");
         var detail = await service.ObtenerMantenimientoAsync(saved.ProductoId);
-        check(detail!.Nombre==preload.Nombre && detail.Precio==0 && detail.ImagenUrl==saved.ImagenUrl,"Productos: detalle refleja edición y conserva imagen");
+        check(detail!.Nombre==preload.Nombre && detail.Precio==1 && detail.ImagenUrl==saved.ImagenUrl,"Productos: detalle refleja edición y conserva imagen");
         check(await service.GuardarAsync(preload,false,"/images/productos/shampoo-ph-neutro.png") is null,"Productos: reemplazar referencia de imagen");
         check((await service.ObtenerMantenimientoAsync(saved.ProductoId))!.ImagenUrl=="/images/productos/shampoo-ph-neutro.png","Productos: imagen reemplazada persistida");
         check(await service.GuardarAsync(Form(),true,null) is not null,"Productos: SKU duplicado rechazado");
-        foreach(var precio in new[]{-1m,0.001m}) { var f=Form();f.Precio=precio;check(await service.GuardarAsync(f,true,null) is not null,"Productos: precio inválido " + precio); }
+        foreach(var precio in new[]{0m,-1m,0.001m}) { var f=Form();f.Precio=precio;check(await service.GuardarAsync(f,true,null) is not null,"Productos: precio inválido " + precio); }
         foreach(var id in new[]{0,int.MaxValue}) { var f=Form();f.CategoriaProductoId=id;check(await service.GuardarAsync(f,true,null) is not null,"Productos: categoría inexistente " + id); }
         foreach(var campo in new[]{"Nombre","Descripcion","Marca","Presentacion","SKU"})
         {

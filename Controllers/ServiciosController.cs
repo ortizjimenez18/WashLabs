@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WashLabs.Models.ViewModels;
 using WashLabs.Services;
@@ -27,6 +27,7 @@ public sealed class ServiciosController(IServicioService service, IImagenService
         var actual = crear ? null : await service.FormularioAsync(f.ServicioId, ct);
         if (!crear && actual is null) return NotFound();
         f.ImagenUrl = actual?.ImagenUrl;
+        if (crear && imagen is null) ModelState.AddModelError("imagen", "Seleccione una imagen del servicio.");
         string? nueva = null;
         var guardada = false;
         try
