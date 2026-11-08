@@ -209,6 +209,31 @@
 })();
 
 (() => {
+    document.querySelectorAll('input[type="date"], input[type="time"]').forEach(input => {
+        if (typeof input.showPicker !== 'function') return;
+        function abrirSelector() {
+            if (input.disabled || input.readOnly) return;
+            try {
+                input.showPicker();
+            } catch (_) {
+                // El control nativo sigue disponible si el navegador no permite abrirlo.
+            }
+        }
+        input.addEventListener('click', abrirSelector);
+        document.querySelectorAll('[data-open-picker]').forEach(button => {
+            if (button.dataset.openPicker !== input.id) return;
+            button.hidden = false;
+            button.addEventListener('click', abrirSelector);
+        });
+        input.addEventListener('keydown', event => {
+            if (event.key !== ' ' || event.ctrlKey || event.altKey || event.metaKey) return;
+            event.preventDefault();
+            abrirSelector();
+        });
+    });
+})();
+
+(() => {
     const form = document.querySelector('[data-booking-form]');
     if (!form) return;
     const client = form.querySelector('[name="Reserva.ClienteId"]');

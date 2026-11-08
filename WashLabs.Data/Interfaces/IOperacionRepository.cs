@@ -7,6 +7,8 @@ public interface IOperacionRepository
     Task<IReadOnlyList<Usuario>> ClientesAsync(CancellationToken ct);
     Task<IReadOnlyList<Vehiculo>> VehiculosAsync(CancellationToken ct, int? clienteId = null);
     Task<string?> RegistrarVehiculoAsync(Vehiculo vehiculo, CancellationToken ct);
+    Task<Vehiculo?> VehiculoAsync(int id, int? clienteId, CancellationToken ct);
+    Task<string?> EditarVehiculoAsync(Vehiculo vehiculo, int? clienteId, CancellationToken ct);
     Task<ConfiguracionWashPoints?> ConfiguracionPuntosAsync(CancellationToken ct);
     Task<IReadOnlyList<CategoriaAsistente>> CategoriasAsistenteAsync(CancellationToken ct);
     Task<PreguntaAsistente?> PreguntaAsync(int id, CancellationToken ct);

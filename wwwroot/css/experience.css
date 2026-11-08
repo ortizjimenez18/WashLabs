@@ -163,6 +163,7 @@ label,.result-count { font-size:15px; }
 .account-links a { grid-template-columns:1fr; }
 .reservation-actions { display:flex; justify-content:flex-end; margin-bottom:24px; }
 .booking-form { max-width:1000px; }
+.booking-picker-button { margin-top:8px; border:1px solid var(--line); border-radius:5px; padding:8px 12px; background:white; color:var(--ink); font:inherit; cursor:pointer; }
 .booking-form .detail-actions { display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
 .form-helper { display:inline-block; margin-top:12px; }
 textarea { width:100%; border:1px solid #b5bbc1; border-radius:5px; padding:12px; font:inherit; color:var(--ink); background:var(--paper); resize:vertical; }

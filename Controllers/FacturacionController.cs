@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using WashLabs.Models;
 using WashLabs.Models.DTOs;
 using WashLabs.ViewModels;
-using System.ComponentModel.DataAnnotations;
 
 namespace WashLabs.Controllers;
 
@@ -19,7 +18,6 @@ public sealed class FacturacionController(IFacturaService facturas, IProductoSer
     }
 
     public async Task<IActionResult> Detalle(long id, CancellationToken cancellationToken,
-        [StringLength(120)] string? busquedaProducto = null, int? categoriaProductoId = null,
         bool mostrarProductos = false, string? volverUrl = null)
     {
         if (!ModelState.IsValid) return BadRequest();
@@ -27,10 +25,8 @@ public sealed class FacturacionController(IFacturaService facturas, IProductoSer
         if (factura is null) return NotFound();
         var puedeEditar = factura.PermiteProductos && (User.IsInRole("Encargado") || User.IsInRole("Administrador"));
         return View(new FacturacionDetalleViewModel { Factura = factura, PuedeEditar = puedeEditar,
-            MostrarProductos = puedeEditar && mostrarProductos, BusquedaProducto = busquedaProducto,
-            CategoriaProductoId = categoriaProductoId, VolverUrl = VolverSeguro(volverUrl),
-            Productos = puedeEditar && mostrarProductos ? await productos.ListarAsync(categoriaProductoId, busquedaProducto, cancellationToken) : [],
-            Categorias = puedeEditar && mostrarProductos ? await productos.ListarCategoriasAsync(cancellationToken) : [] });
+            MostrarProductos = puedeEditar && mostrarProductos, VolverUrl = VolverSeguro(volverUrl),
+            Productos = puedeEditar && mostrarProductos ? await productos.ListarAsync(null, null, cancellationToken) : [] });
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Encargado,Administrador")]

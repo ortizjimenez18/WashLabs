@@ -54,6 +54,12 @@ if (args.Contains("--solo-unitarias"))
     return;
 }
 
+if (args.Contains("--vehiculos"))
+{
+    await PruebasVehiculos.EjecutarAsync();
+    return;
+}
+
 if (args.Contains("--imagenes-catalogo"))
 {
     await PruebasImagenesCatalogo.EjecutarAsync(Verificar);

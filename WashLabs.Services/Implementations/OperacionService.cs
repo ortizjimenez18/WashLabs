@@ -26,6 +26,23 @@ public sealed class OperacionService(IOperacionRepository repository) : IOperaci
             Anio = solicitud.Anio, Color = solicitud.Color?.Trim(), CategoriaTamano = solicitud.CategoriaTamano, Activo = true }, ct);
         return new(error is null, error);
     }
+    public async Task<VehiculoDTO?> VehiculoAsync(int id, int? clienteId, CancellationToken ct = default) =>
+        await repository.VehiculoAsync(id, clienteId, ct) is { } v ? Map(v) : null;
+
+    public async Task<RegistroVehiculoResultadoDTO> EditarVehiculoAsync(int id, RegistroVehiculoDTO solicitud, int? clienteId, CancellationToken ct = default)
+    {
+        var errores = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(solicitud, new ValidationContext(solicitud), errores, true))
+            return new(false, errores[0].ErrorMessage);
+        if (string.IsNullOrWhiteSpace(solicitud.Marca) || string.IsNullOrWhiteSpace(solicitud.Modelo))
+            return new(false, "Indica la marca y el modelo.");
+        var error = await repository.EditarVehiculoAsync(new Vehiculo { VehiculoId = id,
+            Matricula = solicitud.Matricula.Trim().ToUpperInvariant(), Marca = solicitud.Marca.Trim(),
+            Modelo = solicitud.Modelo.Trim(), Anio = solicitud.Anio, Color = solicitud.Color?.Trim(),
+            CategoriaTamano = solicitud.CategoriaTamano }, clienteId, ct);
+        return new(error is null, error);
+    }
+
     public async Task<IReadOnlyList<WashPointsVehiculoDTO>> WashPointsAsync(CancellationToken ct = default, int? clienteId = null)
     {
         var config = await repository.ConfiguracionPuntosAsync(ct)

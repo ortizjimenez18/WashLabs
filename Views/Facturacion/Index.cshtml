@@ -64,7 +64,7 @@
                 @foreach (var documento in Model.Historial.Documentos)
                 {
                     <tr data-document-id="@documento.FacturaId">
-                        <td data-label="Documento"><a class="billing-document-link" asp-action="Detalle" asp-route-id="@documento.FacturaId" asp-route-volverUrl="@volverUrl" aria-label="Ver @documento.TipoDocumento @documento.FacturaId">#@documento.FacturaId <span aria-hidden="true">↗</span></a>
+                        <td data-label="Documento"><a class="billing-document-link" asp-action="Detalle" asp-route-id="@documento.FacturaId" asp-route-volverUrl="@volverUrl" aria-label="Ver @documento.TipoDocumento @documento.FacturaId">#@documento.FacturaId</a>
                             <div class="billing-document-tags">@if (documento.TipoDocumento != "PROFORMA" || documento.Estado != "Proforma") { <span class="billing-type">@(documento.TipoDocumento == "PROFORMA" ? "Proforma" : "Factura")</span> }<partial name="_EstadoFactura" model="documento.Estado" /></div>
                         </td>
                         <td data-label="Cliente">@documento.Cliente</td>

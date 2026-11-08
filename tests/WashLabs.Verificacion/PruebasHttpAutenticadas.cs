@@ -195,9 +195,10 @@ internal static class PruebasHttpAutenticadas
                     var proformaHtml = await cliente.GetStringAsync("/Facturacion/Detalle/" + proformaHttp);
                     Verificar(proformaHtml.Contains("Agregar producto"), "HTTP: encargado dispone del formulario de productos");
                     var productos = await db.Productos.AsNoTracking().Where(p => p.Nombre.StartsWith("TST producto ")).OrderByDescending(p => p.ProductoId).Take(2).ToListAsync();
-                    var catalogoHtml = await cliente.GetStringAsync($"/Facturacion/Detalle/{proformaHttp}?mostrarProductos=true&busquedaProducto={Uri.EscapeDataString(productos[0].Nombre)}&categoriaProductoId={productos[0].CategoriaProductoId}");
-                    Verificar(catalogoHtml.Contains($"value=\"{productos[0].ProductoId}\"") && !catalogoHtml.Contains($"value=\"{productos[1].ProductoId}\">"),
-                        "HTTP: catálogo filtra productos reales por nombre y categoría");
+                    var catalogoHtml = await cliente.GetStringAsync($"/Facturacion/Detalle/{proformaHttp}?mostrarProductos=true");
+                    Verificar(productos.All(p => catalogoHtml.Contains($"value=\"{p.ProductoId}\" data-price=\""))
+                        && !catalogoHtml.Contains("id=\"busquedaProducto\""),
+                        "HTTP: selección directa ofrece productos con precio sin búsqueda previa");
                     foreach (var producto in productos)
                     {
                         using var incluir = await cliente.PostAsync("/Facturacion/AgregarProducto/" + proformaHttp,

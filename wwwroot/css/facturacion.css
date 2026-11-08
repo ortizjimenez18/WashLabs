@@ -13,7 +13,7 @@
 .billing-summary strong { display:block; margin-block:6px; font-size:28px; letter-spacing:-.6px; font-variant-numeric:tabular-nums; }
 .billing-summary small { font-size:12px; line-height:1.5; }
 .billing-money-summary strong,.billing-invoice-lines small,.billing-totals dd { text-align:right; }
-.billing-add-product select { text-align:right; }
+.billing-add-product select { text-align:left; }
 .billing-filters,.billing-product-picker { border:1px solid var(--line); border-radius:8px; padding:24px; background:white; }
 .billing-filter-heading { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:20px; }
 .billing-filter-heading h2,.billing-results-heading h2,.billing-completion h2 { font:650 20px 'Segoe UI',Arial,sans-serif; letter-spacing:-.3px; }

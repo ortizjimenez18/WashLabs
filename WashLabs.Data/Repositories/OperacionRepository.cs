@@ -32,6 +32,30 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
         return null;
     }
 
+    public Task<Vehiculo?> VehiculoAsync(int id, int? clienteId, CancellationToken ct) =>
+        context.Vehiculos.AsNoTracking().Include(v => v.Cliente).SingleOrDefaultAsync(v =>
+            v.VehiculoId == id && v.Activo && v.Cliente.Activo
+            && (!clienteId.HasValue || v.ClienteId == clienteId.Value), ct);
+
+    public async Task<string?> EditarVehiculoAsync(Vehiculo vehiculo, int? clienteId, CancellationToken ct)
+    {
+        var actual = await context.Vehiculos.SingleOrDefaultAsync(v => v.VehiculoId == vehiculo.VehiculoId
+            && v.Activo && v.Cliente.Activo && (!clienteId.HasValue || v.ClienteId == clienteId.Value), ct);
+        if (actual is null) return "El vehículo no está disponible.";
+        if (await context.Vehiculos.AnyAsync(v => v.VehiculoId != actual.VehiculoId && v.Matricula == vehiculo.Matricula, ct))
+            return "La matrícula ya está registrada.";
+        actual.Matricula = vehiculo.Matricula;
+        actual.Marca = vehiculo.Marca;
+        actual.Modelo = vehiculo.Modelo;
+        actual.Anio = vehiculo.Anio;
+        actual.Color = vehiculo.Color;
+        actual.CategoriaTamano = vehiculo.CategoriaTamano;
+        try { await context.SaveChangesAsync(ct); }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        { context.Entry(actual).State = EntityState.Detached; return "La matrícula ya está registrada."; }
+        return null;
+    }
+
     public Task<ConfiguracionWashPoints?> ConfiguracionPuntosAsync(CancellationToken ct) =>
         context.ConfiguracionWashPoints.AsNoTracking().Where(c => c.Activa)
             .OrderBy(c => c.ConfiguracionWashPointsId).FirstOrDefaultAsync(ct);

@@ -6,6 +6,8 @@ public interface IOperacionService
     Task<IReadOnlyList<ClienteOpcionDTO>> ClientesAsync(CancellationToken ct = default);
     Task<IReadOnlyList<VehiculoDTO>> VehiculosAsync(CancellationToken ct = default, int? clienteId = null);
     Task<RegistroVehiculoResultadoDTO> RegistrarVehiculoAsync(RegistroVehiculoDTO solicitud, CancellationToken ct = default);
+    Task<VehiculoDTO?> VehiculoAsync(int id, int? clienteId, CancellationToken ct = default);
+    Task<RegistroVehiculoResultadoDTO> EditarVehiculoAsync(int id, RegistroVehiculoDTO solicitud, int? clienteId, CancellationToken ct = default);
     Task<IReadOnlyList<WashPointsVehiculoDTO>> WashPointsAsync(CancellationToken ct = default, int? clienteId = null);
     Task<IReadOnlyList<CategoriaAsistenteDTO>> CategoriasAsistenteAsync(CancellationToken ct = default);
     Task<PreguntaAsistenteDTO?> PreguntaAsync(int id, CancellationToken ct = default);

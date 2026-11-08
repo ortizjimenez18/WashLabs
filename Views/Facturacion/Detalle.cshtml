@@ -77,25 +77,17 @@
     @if (Model.PuedeEditar && Model.MostrarProductos)
     {
         <section id="catalogo-productos" class="billing-product-picker billing-no-print" aria-labelledby="catalogo-titulo">
-            <div class="billing-filter-heading"><div><h2 id="catalogo-titulo">Agregar productos a la orden</h2><p>Selecciona productos del catálogo y revisa sus precios.</p></div><a class="text-link" asp-action="Detalle" asp-route-id="@factura.FacturaId" asp-route-volverUrl="@Model.VolverUrl">Cerrar catálogo</a></div>
-            <form asp-action="Detalle" method="get" class="billing-product-search">
-                <input type="hidden" name="id" value="@factura.FacturaId" /><input type="hidden" name="mostrarProductos" value="true" /><input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
-                <div><label for="busquedaProducto">Buscar producto</label><input id="busquedaProducto" name="busquedaProducto" value="@Model.BusquedaProducto" maxlength="120" placeholder="Nombre del producto" /></div>
-                <div><label for="categoriaProductoId">Categoría</label><select id="categoriaProductoId" name="categoriaProductoId"><option value="">Todas las categorías</option>
-                    @foreach (var categoria in Model.Categorias) { <option value="@categoria.CategoriaProductoId" selected="@(Model.CategoriaProductoId == categoria.CategoriaProductoId)">@categoria.Nombre</option> }
-                </select></div>
-                <button class="button billing-secondary" type="submit">Buscar productos</button>
-            </form>
+            <div class="billing-filter-heading"><div><h2 id="catalogo-titulo">Agregar producto</h2><p>Elige un producto, indica la cantidad y agrégalo a la orden.</p></div><a class="text-link" asp-action="Detalle" asp-route-id="@factura.FacturaId" asp-route-volverUrl="@Model.VolverUrl">Cerrar</a></div>
             @if (Model.Productos.Count == 0)
             {
-                <p class="notice">No hay productos activos que coincidan con tu búsqueda.</p>
+                <p class="notice">No hay productos activos disponibles.</p>
             }
             else
             {
                 <form method="post" asp-action="AgregarProducto" asp-route-id="@factura.FacturaId" class="billing-add-product" data-billing-write>
                     <input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
                     <div><label for="productoId">Producto y precio unitario</label><select id="productoId" name="productoId" required><option value="">Seleccionar producto</option>
-                        @foreach (var producto in Model.Productos) { <option value="@producto.ProductoId" data-price="₡ @producto.Precio.ToString("#,##0.##", culture)">@producto.Nombre · @producto.Categoria</option> }
+                        @foreach (var producto in Model.Productos.OrderBy(p => p.Nombre)) { <option value="@producto.ProductoId" data-price="₡ @producto.Precio.ToString("#,##0.##", culture)">@producto.Nombre · ₡ @producto.Precio.ToString("#,##0.##", culture)</option> }
                     </select><output class="washlabs-price" id="producto-precio" for="productoId" aria-live="polite"></output>
                     <noscript><ul>@foreach (var producto in Model.Productos) { <li>@producto.Nombre: <span class="washlabs-price">₡ @producto.Precio.ToString("#,##0.##", culture)</span></li> }</ul></noscript></div>
                     <div><label for="cantidad">Cantidad de unidades</label><input id="cantidad" name="cantidad" type="number" min="1" max="99999999" step="1" value="1" required /></div>

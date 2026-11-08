@@ -1,0 +1,19 @@
+@model WashLabs.Models.DTOs.VehiculoDTO
+@{ ViewData["Title"] = $"Vehículo {Model.Matricula}"; }
+<section class="shell page-heading"><p class="eyebrow">WASHLABS / VEHÍCULOS</p><h1>@Model.Matricula</h1><p class="lede">@Model.Marca @Model.Modelo</p></section>
+<section class="shell detail-section">
+    <div class="document-panel">
+        @if (TempData["Mensaje"] is string mensaje) { <p class="notice" role="status">@mensaje</p> }
+        <h2>Datos del vehículo</h2>
+        <dl>
+            <dt>Cliente</dt><dd>@Model.Cliente</dd>
+            <dt>Matrícula</dt><dd>@Model.Matricula</dd>
+            <dt>Marca</dt><dd>@Model.Marca</dd>
+            <dt>Modelo</dt><dd>@Model.Modelo</dd>
+            <dt>Año</dt><dd>@(Model.Anio?.ToString() ?? "No registrado")</dd>
+            <dt>Color</dt><dd>@(string.IsNullOrWhiteSpace(Model.Color) ? "No registrado" : Model.Color)</dd>
+            <dt>Tamaño</dt><dd>@(Model.CategoriaTamano switch { "PEQUENO" => "Pequeño", "MEDIANO" => "Mediano", "GRANDE" => "Grande", "PICKUP" => "Pick-up", "OTRO" => "Otro", _ => Model.CategoriaTamano })</dd>
+        </dl>
+        <div class="detail-actions"><a class="button" asp-action="Editar" asp-route-id="@Model.VehiculoId">Editar vehículo</a><a class="text-link" asp-action="Index">Volver al listado</a></div>
+    </div>
+</section>
