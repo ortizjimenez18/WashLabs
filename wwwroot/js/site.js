@@ -244,6 +244,18 @@
     const slots = form.querySelector('.booking-slots');
     const status = form.querySelector('#booking-availability-status');
     let version = 0;
+    function clientDetails() {
+        const option = client.selectedOptions[0];
+        const output = form.querySelector('[data-booking-client]');
+        if (output) output.textContent = option?.value ? [option.textContent, option.dataset.email].filter(Boolean).join(' · ') : '';
+    }
+    function serviceDetails() {
+        const option = service.selectedOptions[0];
+        const duration = form.querySelector('[data-booking-duration]');
+        const price = form.querySelector('[data-booking-price]');
+        if (duration) duration.textContent = option?.dataset.duration ? `${option.dataset.duration} min` : '';
+        if (price) price.textContent = option?.dataset.price || '';
+    }
     function vehicles() {
         const current = vehicle.value;
         const available = [];
@@ -293,11 +305,13 @@
             if (current === version) status.textContent = 'No se pudieron consultar los horarios. Cambia la fecha para intentar nuevamente.';
         } finally { clearTimeout(timeout); }
     }
-    client.addEventListener('change', vehicles);
-    service.addEventListener('change', () => availability());
+    client.addEventListener('change', () => { vehicles(); clientDetails(); });
+    service.addEventListener('change', () => { serviceDetails(); availability(); });
     date.addEventListener('change', () => availability());
     time.addEventListener('change', highlightTime);
     vehicles();
+    clientDetails();
+    serviceDetails();
     if (service.value && date.value) availability(false);
 })();
 

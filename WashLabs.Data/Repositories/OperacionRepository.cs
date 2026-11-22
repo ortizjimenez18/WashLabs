@@ -4,6 +4,7 @@ using System.Data;
 using WashLabs.Data.Context;
 using WashLabs.Data.Entities;
 using WashLabs.Data.Interfaces;
+using WashLabs.Models.DTOs;
 
 namespace WashLabs.Data.Repositories;
 
@@ -70,7 +71,7 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
             .Include(p => p.OpcionesAsistentePreguntaAsistente.Where(o => o.Activa))
             .SingleOrDefaultAsync(p => p.PreguntaAsistenteId == id && p.Activa && p.CategoriaAsistente.Activa, ct);
 
-    public async Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct)
+    public async Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct, TipoCambioVentaDTO? tipoCambio = null)
     {
         var estado = await context.EstadosCita.Where(e => e.Nombre == "Completada").Select(e => (byte?)e.EstadoCitaId).SingleOrDefaultAsync(ct);
         if (estado is null) return false;
@@ -101,7 +102,10 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
             factura.EstadoFacturaId = await context.EstadosFactura.Where(e => e.Nombre == "Pendiente")
                 .Select(e => e.EstadoFacturaId).SingleAsync(ct);
             factura.TipoDocumento = "FACTURA";
-            factura.Fecha = DateTime.Now;
+            factura.Fecha = DisponibilidadReserva.Ahora;
+            factura.EmitidaPorUsuarioId = encargadoId;
+            factura.TipoCambioVenta = tipoCambio?.Valor;
+            factura.FechaTipoCambioVenta = tipoCambio?.Fecha;
             await FacturaRepository.ActualizarTotalesAsync(context, factura, ct);
             if (!await context.MovimientosWashPoints.AnyAsync(m => m.CitaId == id && m.TipoMovimiento == "ACUMULA", ct))
             {

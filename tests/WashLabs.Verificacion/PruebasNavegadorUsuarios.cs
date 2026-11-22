@@ -95,7 +95,7 @@ internal static class PruebasNavegadorUsuarios
                     await Task.Delay(200);
                     verificar((await Evaluar("document.documentElement.scrollWidth <= window.innerWidth + 1")).GetBoolean(), $"Usuarios: {pagina} sin desbordamiento a {ancho}px");
                     if (pagina == "ListaUsuarios")
-                        verificar((await Evaluar("document.querySelector('h1').textContent === 'Lista de Usuarios (María Paula Murillo Rosales)' && document.querySelectorAll('tr[data-user-id]').length >= 3")).GetBoolean(), "Navegador: título exacto y mínimo tres registros visibles");
+                        verificar((await Evaluar("document.querySelector('h1').textContent === 'Lista de Usuarios' && document.querySelectorAll('tr[data-user-id]').length >= 3")).GetBoolean(), "Navegador: título exacto y mínimo tres registros visibles");
                     var captura = await Comando("Page.captureScreenshot", new { format = "png", captureBeyondViewport = true });
                     await File.WriteAllBytesAsync(Path.Combine(carpeta, pagina + (ancho == 1366 ? "" : "-movil") + ".png"), Convert.FromBase64String(captura.GetProperty("data").GetString()!));
                 }

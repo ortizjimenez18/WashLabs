@@ -26,7 +26,7 @@ public sealed class CrearRespuestaReservaDTO
     [StringLength(700, ErrorMessage = "Cada respuesta admite hasta 700 caracteres.")]
     public string Respuesta { get; set; } = "";
 }
-public sealed record ServicioReservaDTO(int ServicioId, string Nombre, int DuracionMinutos);
+public sealed record ServicioReservaDTO(int ServicioId, string Nombre, int DuracionMinutos, decimal Precio = 0);
 public sealed record PreguntaReservaDTO(int PreguntaId, string Pregunta);
 public sealed record FormularioReservaDTO(string Sucursal, IReadOnlyList<ServicioReservaDTO> Servicios,
     IReadOnlyList<PreguntaReservaDTO> Preguntas, int SucursalId, IReadOnlyList<SucursalReservaDTO> Sucursales);

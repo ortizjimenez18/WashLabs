@@ -1,0 +1,67 @@
+@model WashLabs.ViewModels.EmitirFacturaViewModel
+@{
+    ViewData["Title"] = "Nueva factura";
+    var invariant = System.Globalization.CultureInfo.InvariantCulture;
+    var tasa = Model.Tasa;
+}
+@section Styles { <link rel="stylesheet" href="~/css/facturacion.css" asp-append-version="true" /> }
+<section class="shell billing-page">
+    <header class="billing-heading"><h1>Nueva factura</h1><a class="text-link" asp-action="Index">Volver al historial</a></header>
+    @if (Model.Formulario.Sucursales.Count > 1)
+    {
+        <form method="get" asp-action="Crear" class="filters">
+            <div><label for="sucursalId">Sucursal de trabajo</label><select id="sucursalId" name="sucursalId">
+                @foreach (var sucursal in Model.Formulario.Sucursales) { <option value="@sucursal.SucursalId" selected="@(sucursal.SucursalId == Model.Solicitud.SucursalId)">@sucursal.Nombre</option> }
+            </select></div>
+            <button class="button" type="submit">Cargar sucursal</button>
+        </form>
+    }
+    <form method="post" asp-action="Crear" class="billing-invoice" data-billing-write data-emision data-venta="@tasa?.Valor.ToString(invariant)">
+        <input type="hidden" asp-for="Solicitud.SolicitudId" /><input type="hidden" asp-for="Solicitud.SucursalId" />
+        <input type="hidden" name="cotizacion" value="@Model.Cotizacion" />
+        <div asp-validation-summary="All" class="validation-errors" role="alert"></div>
+        <div class="billing-invoice-meta">
+            <section><h2>Encabezado</h2><p>Fecha de facturación: @WashLabs.Models.DTOs.DisponibilidadReserva.Ahora.ToString("d")</p><p>Sucursal: <strong>@Model.Formulario.Sucursal</strong></p><p>Encargado: <strong>@Model.Encargado</strong></p></section>
+            <section><label asp-for="Solicitud.ClienteId">Cliente</label><select asp-for="Solicitud.ClienteId" required>
+                <option value="">Seleccionar cliente</option>
+                @foreach (var cliente in Model.Clientes) { <option value="@cliente.ClienteId" data-email="@cliente.Correo">@cliente.Nombre</option> }
+            </select><output data-emision-cliente for="Solicitud_ClienteId" aria-live="polite"></output></section>
+        </div>
+        <fieldset class="billing-emision-lines">
+            <legend>Líneas de detalle</legend>
+            <div data-emision-lineas>
+                @for (var i = 0; i < Model.Solicitud.Lineas.Count; i++)
+                {
+                    <div class="billing-add-product" data-emision-linea>
+                        <div><label asp-for="Solicitud.Lineas[i].Articulo">Producto o servicio</label><select asp-for="Solicitud.Lineas[i].Articulo" required>
+                            <option value="">Seleccionar</option>
+                            <optgroup label="Productos">
+                                @foreach (var producto in Model.Productos) { <option value="P:@producto.ProductoId" data-price="@producto.Precio.ToString(invariant)">@producto.Nombre</option> }
+                            </optgroup>
+                            <optgroup label="Servicios">
+                                @foreach (var servicio in Model.Formulario.Servicios) { <option value="S:@servicio.ServicioId" data-price="@servicio.Precio.ToString(invariant)">@WashLabs.Services.Mappers.NombreCatalogo.ParaMostrar(servicio.Nombre)</option> }
+                            </optgroup>
+                        </select><output class="washlabs-price" data-emision-precio></output></div>
+                        <div><label asp-for="Solicitud.Lineas[i].Cantidad">Cantidad</label><input asp-for="Solicitud.Lineas[i].Cantidad" type="number" min="0" max="99999999" step="1" required /></div>
+                        <button type="button" class="billing-inline-button billing-remove" data-emision-quitar>Quitar línea</button>
+                        <output class="billing-preview" data-emision-subtotal aria-live="polite"></output>
+                    </div>
+                }
+            </div>
+            <button type="button" class="button billing-secondary" data-emision-agregar>Agregar línea</button>
+        </fieldset>
+        <dl class="billing-totals" aria-live="polite">
+            <div><dt>Subtotal</dt><dd class="washlabs-price" data-emision-neto>₡ 0,00</dd></div>
+            <div><dt>IVA</dt><dd class="washlabs-price" data-emision-iva>₡ 0,00</dd></div>
+            <div class="billing-grand-total"><dt>Total a pagar</dt><dd class="washlabs-price" data-emision-total>₡ 0,00</dd></div>
+            @if (tasa is not null)
+            {
+                <div class="billing-usd"><dt>Equivalente en dólares</dt><dd class="washlabs-price" data-emision-usd>USD 0,00</dd></div>
+                <div class="billing-usd-note"><dt>Tipo de cambio de venta · Hacienda</dt><dd>₡ @tasa.Valor.ToString("0.00####") · @tasa.Fecha.ToString("d")</dd></div>
+            }
+            else { <div class="billing-usd-note"><dt>Equivalente en dólares no disponible</dt><dd></dd></div> }
+        </dl>
+        <div class="detail-actions"><button class="button" type="submit">Emitir factura</button></div>
+    </form>
+</section>
+@section Scripts { <script src="~/js/facturacion.js" asp-append-version="true"></script> }

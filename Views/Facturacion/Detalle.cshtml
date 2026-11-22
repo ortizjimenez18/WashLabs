@@ -4,6 +4,8 @@
     var titulo = factura.TipoDocumento == "PROFORMA" ? "Proforma" : "Factura";
     ViewData["Title"] = $"{titulo} #{factura.FacturaId}";
     var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR");
+    var invariant = System.Globalization.CultureInfo.InvariantCulture;
+    var tasa = factura.TipoCambio;
     var descuentos = factura.Lineas.Sum(l => l.Descuento);
     var historialUrl = Model.VolverUrl ?? Url.Action("Index", "Facturacion");
 }
@@ -13,7 +15,7 @@
     <header class="billing-heading billing-no-print">
         <div><p class="eyebrow">WASHLABS / COMPROBANTE</p><h1>@titulo #@factura.FacturaId</h1></div>
         <div class="billing-actions"><a class="button billing-secondary" href="@historialUrl">Volver al historial</a><button class="button billing-secondary" type="button" data-print-document>Imprimir @titulo.ToLowerInvariant()</button>
-            @if (Model.PuedeEditar) { <a class="button" asp-action="Detalle" asp-route-id="@factura.FacturaId" asp-route-mostrarProductos="true" asp-route-volverUrl="@Model.VolverUrl" asp-fragment="catalogo-productos">+ Agregar producto</a> }
+            @if (Model.PuedeEditar) { <a class="button" asp-action="Detalle" asp-route-id="@factura.FacturaId" asp-route-mostrarProductos="true" asp-route-volverUrl="@Model.VolverUrl" asp-fragment="catalogo-productos">+ Agregar producto o servicio</a> }
         </div>
     </header>
     @if (TempData["Mensaje"] is string mensaje) { <p class="notice billing-no-print" role="status">@mensaje</p> }
@@ -23,10 +25,12 @@
             <div class="billing-invoice-number"><p class="eyebrow">@factura.TipoDocumento</p><h2>#@factura.FacturaId</h2><partial name="_EstadoFactura" model="factura.Estado" /><p>Emisión: @factura.Fecha.ToString("MM/dd/yyyy HH:mm")</p></div>
         </header>
         <div class="billing-invoice-meta">
-            <section><h3>Facturado a</h3><strong>@factura.Cliente</strong><p>Identificación: @(factura.IdentificacionCliente ?? "No registrada")</p>
+            <section><h3>Facturado a</h3><strong>@factura.Cliente</strong><p>@factura.CorreoCliente</p><p>Identificación: @(factura.IdentificacionCliente ?? "No registrada")</p>
                 @if (factura.CitaId.HasValue) { <p class="billing-reservation-reference"><a asp-controller="Reservas" asp-action="Detalle" asp-route-id="@factura.CitaId">Reserva #@factura.CitaId</a></p> }
             </section>
-            <section><h3>Sucursal</h3><strong>@factura.Sucursal.Nombre</strong><p>@factura.Sucursal.Direccion</p><p>Teléfono: @factura.Sucursal.Telefono<br />Correo: @factura.Sucursal.Correo</p></section>
+            <section><h3>Sucursal</h3><strong>@factura.Sucursal.Nombre</strong><p>@factura.Sucursal.Direccion</p><p>Teléfono: @factura.Sucursal.Telefono<br />Correo: @factura.Sucursal.Correo</p>
+                @if (factura.Encargado is not null) { <p>Encargado: <strong>@factura.Encargado</strong></p> }
+            </section>
         </div>
         <div class="billing-invoice-table-wrap">
             <table class="billing-invoice-lines"><caption>Detalle de la orden</caption><thead><tr><th scope="col">Producto / Servicio</th><th scope="col" class="numeric">Cantidad</th><th scope="col" class="numeric">Precio unitario</th><th scope="col" class="numeric">Subtotal</th></tr></thead><tbody>
@@ -35,20 +39,21 @@
                 <tr>
                     <td><strong>@linea.Descripcion</strong><small>@linea.Tipo · IVA @linea.PorcentajeImpuesto.ToString("0.##", culture)%: <span class="washlabs-price">₡ @linea.Impuesto.ToString("#,##0.##", culture)</span></small>
                         @if (linea.Descuento > 0) { <small>Descuento: <span class="washlabs-price">₡ @linea.Descuento.ToString("#,##0.##", culture)</span></small> }
-                        @if (Model.PuedeEditar && linea.ProductoId.HasValue)
+                        @if (Model.PuedeEditar && linea.Editable)
                         {
                             <div class="billing-line-actions billing-no-print">
-                                <form method="post" asp-action="CambiarCantidad" asp-route-id="@factura.FacturaId" data-billing-write>
+                                <form method="post" asp-action="CambiarCantidad" asp-route-id="@factura.FacturaId" data-billing-write data-price="@linea.PrecioUnitario.ToString(invariant)" data-iva="@linea.PorcentajeImpuesto.ToString(invariant)" data-discount="@linea.Descuento.ToString(invariant)" data-previous="@((linea.Subtotal + linea.Impuesto).ToString(invariant))">
                                     <input type="hidden" name="detalleId" value="@linea.DetalleFacturaId" /><input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
                                     <label class="billing-sr-only" for="cantidad-@linea.DetalleFacturaId">Cantidad de @linea.Descripcion</label>
-                                    <input id="cantidad-@linea.DetalleFacturaId" name="cantidad" type="number" min="1" max="99999999" step="1" value="@linea.Cantidad.ToString("0", System.Globalization.CultureInfo.InvariantCulture)" required />
+                                    <input id="cantidad-@linea.DetalleFacturaId" name="cantidad" type="number" min="0" max="99999999" step="1" value="@linea.Cantidad.ToString("0", invariant)" required />
                                     <button type="submit" class="billing-inline-button">Guardar cantidad</button>
                                 </form>
                                 <form method="post" asp-action="QuitarProducto" asp-route-id="@factura.FacturaId" data-billing-write>
                                     <input type="hidden" name="detalleId" value="@linea.DetalleFacturaId" /><input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
-                                    <button type="submit" class="billing-inline-button billing-remove" aria-label="Quitar @linea.Descripcion">Quitar producto</button>
+                                    <button type="submit" class="billing-inline-button billing-remove" aria-label="Quitar @linea.Descripcion">Quitar línea</button>
                                 </form>
                             </div>
+                            <output class="billing-preview billing-no-print" data-line-preview aria-live="polite"></output>
                         }
                     </td>
                     <td class="numeric" data-label="Cantidad">@linea.Cantidad.ToString("0.##", culture)</td><td class="numeric washlabs-price" data-label="Precio unitario">₡ @linea.PrecioUnitario.ToString("#,##0.##", culture)</td><td class="numeric washlabs-price" data-label="Subtotal">₡ @linea.Subtotal.ToString("#,##0.##", culture)</td>
@@ -65,7 +70,16 @@
                 @if (descuentos > 0) { <div><dt>Importe antes de descuentos</dt><dd class="washlabs-price">₡ @((factura.Subtotal + descuentos).ToString("#,##0.##", culture))</dd></div><div><dt>Descuentos</dt><dd class="washlabs-price">− ₡ @descuentos.ToString("#,##0.##", culture)</dd></div> }
                 <div><dt>Subtotal</dt><dd class="washlabs-price">₡ @factura.Subtotal.ToString("#,##0.##", culture)</dd></div>
                 @foreach (var impuesto in factura.Impuestos) { <div><dt>IVA (@impuesto.Porcentaje.ToString("0.##", culture)%)</dt><dd class="washlabs-price">₡ @impuesto.Monto.ToString("#,##0.##", culture)</dd></div> }
-                <div class="billing-grand-total"><dt>Total a pagar</dt><dd class="washlabs-price">₡ @factura.Total.ToString("#,##0.##", culture)</dd></div>
+                <div class="billing-grand-total"><dt>Total a pagar</dt><dd class="washlabs-price" data-billing-total="@factura.Total.ToString(invariant)" data-venta="@tasa?.Valor.ToString(invariant)">₡ @factura.Total.ToString("N2", culture)</dd></div>
+                @if (tasa is not null)
+                {
+                    <div class="billing-usd"><dt>Equivalente en dólares</dt><dd class="washlabs-price">USD @tasa.Equivalente(factura.Total).ToString("N2", culture)</dd></div>
+                    <div class="billing-usd-note"><dt>Tipo de cambio de venta · Hacienda</dt><dd>₡ @tasa.Valor.ToString("0.00####", culture) · @tasa.Fecha.ToString("d")</dd></div>
+                }
+                else if (factura.TipoDocumento == "PROFORMA" || factura.Encargado is not null)
+                {
+                    <div class="billing-usd-note"><dt>Equivalente en dólares no disponible</dt><dd></dd></div>
+                }
                 @if (factura.TipoDocumento == "FACTURA" && factura.MontoPagado > 0)
                 {
                     <div><dt>Pagos registrados</dt><dd class="washlabs-price">₡ @factura.MontoPagado.ToString("#,##0.##", culture)</dd></div>
@@ -77,30 +91,43 @@
     @if (Model.PuedeEditar && Model.MostrarProductos)
     {
         <section id="catalogo-productos" class="billing-product-picker billing-no-print" aria-labelledby="catalogo-titulo">
-            <div class="billing-filter-heading"><div><h2 id="catalogo-titulo">Agregar producto</h2><p>Elige un producto, indica la cantidad y agrégalo a la orden.</p></div><a class="text-link" asp-action="Detalle" asp-route-id="@factura.FacturaId" asp-route-volverUrl="@Model.VolverUrl">Cerrar</a></div>
+            <div class="billing-filter-heading"><div><h2 id="catalogo-titulo">Agregar productos y servicios</h2></div><a class="text-link" asp-action="Detalle" asp-route-id="@factura.FacturaId" asp-route-volverUrl="@Model.VolverUrl">Cerrar</a></div>
             @if (Model.Productos.Count == 0)
             {
                 <p class="notice">No hay productos activos disponibles.</p>
             }
             else
             {
-                <form method="post" asp-action="AgregarProducto" asp-route-id="@factura.FacturaId" class="billing-add-product" data-billing-write>
+                <form method="post" asp-action="AgregarProducto" asp-route-id="@factura.FacturaId" class="billing-add-product" data-billing-write data-catalog-preview>
                     <input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
                     <div><label for="productoId">Producto y precio unitario</label><select id="productoId" name="productoId" required><option value="">Seleccionar producto</option>
-                        @foreach (var producto in Model.Productos.OrderBy(p => p.Nombre)) { <option value="@producto.ProductoId" data-price="₡ @producto.Precio.ToString("#,##0.##", culture)">@producto.Nombre · ₡ @producto.Precio.ToString("#,##0.##", culture)</option> }
+                        @foreach (var producto in Model.Productos.OrderBy(p => p.Nombre)) { <option value="@producto.ProductoId" data-price="@producto.Precio.ToString(invariant)">@producto.Nombre · ₡ @producto.Precio.ToString("#,##0.##", culture)</option> }
                     </select><output class="washlabs-price" id="producto-precio" for="productoId" aria-live="polite"></output>
                     <noscript><ul>@foreach (var producto in Model.Productos) { <li>@producto.Nombre: <span class="washlabs-price">₡ @producto.Precio.ToString("#,##0.##", culture)</span></li> }</ul></noscript></div>
                     <div><label for="cantidad">Cantidad de unidades</label><input id="cantidad" name="cantidad" type="number" min="1" max="99999999" step="1" value="1" required /></div>
                     <button class="button" type="submit">Agregar producto</button>
+                    <output class="billing-preview" data-catalog-totals aria-live="polite"></output>
                 </form>
                 <p class="billing-picker-note">Repetir el mismo producto y cantidad conserva la línea existente. Para cambiar sus unidades, usa Guardar cantidad en la orden.</p>
+            }
+            @if (Model.Servicios.Count > 0)
+            {
+                <form method="post" asp-action="AgregarServicio" asp-route-id="@factura.FacturaId" class="billing-add-product" data-billing-write data-catalog-preview>
+                    <input type="hidden" name="volverUrl" value="@Model.VolverUrl" />
+                    <div><label for="servicioId">Servicio y precio unitario</label><select id="servicioId" name="servicioId" required><option value="">Seleccionar servicio</option>
+                        @foreach (var servicio in Model.Servicios) { <option value="@servicio.ServicioId" data-price="@servicio.Precio.ToString(invariant)">@WashLabs.Services.Mappers.NombreCatalogo.ParaMostrar(servicio.Nombre) · ₡ @servicio.Precio.ToString("N2", culture)</option> }
+                    </select><output class="washlabs-price" for="servicioId" aria-live="polite"></output></div>
+                    <div><label for="cantidad-servicio">Cantidad</label><input id="cantidad-servicio" name="cantidad" type="number" min="1" max="99999999" step="1" value="1" required /></div>
+                    <button class="button" type="submit">Agregar servicio</button>
+                    <output class="billing-preview" data-catalog-totals aria-live="polite"></output>
+                </form>
             }
         </section>
     }
     @if (Model.PuedeEditar && factura.CitaId.HasValue)
     {
         <section class="billing-completion billing-no-print"><div><h2>Finalizar la orden</h2><p>Revisa los importes antes de completar el servicio y emitir la factura.</p></div>
-            <form method="post" asp-action="CompletarCita" asp-route-id="@factura.FacturaId" data-billing-write><input type="hidden" name="volverUrl" value="@Model.VolverUrl" /><button class="button" type="submit">Completar cita y emitir factura</button></form>
+            <form method="post" asp-action="CompletarCita" asp-route-id="@factura.FacturaId" data-billing-write><input type="hidden" name="volverUrl" value="@Model.VolverUrl" /><input type="hidden" name="cotizacion" value="@Model.Cotizacion" /><button class="button" type="submit">Completar cita y emitir factura</button></form>
         </section>
     }
 </section>

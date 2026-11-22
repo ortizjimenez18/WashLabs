@@ -8,6 +8,7 @@
 }
 @section Styles { <link rel="stylesheet" href="~/css/facturacion.css" asp-append-version="true" /> }
 <section class="shell billing-page">
+    @if (!User.IsInRole("Cliente")) { <div class="detail-actions"><a class="button" asp-action="Crear">Nueva factura</a></div> }
     <header class="billing-heading">
         <div><p class="eyebrow">WASHLABS / DOCUMENTOS</p><h1>Facturación</h1><p class="lede">Consulta tus comprobantes y gestiona las proformas de cada reserva.</p></div>
         @if (!User.IsInRole("Cliente"))
@@ -65,7 +66,7 @@
                 {
                     <tr data-document-id="@documento.FacturaId">
                         <td data-label="Documento"><a class="billing-document-link" asp-action="Detalle" asp-route-id="@documento.FacturaId" asp-route-volverUrl="@volverUrl" aria-label="Ver @documento.TipoDocumento @documento.FacturaId">#@documento.FacturaId</a>
-                            <div class="billing-document-tags">@if (documento.TipoDocumento != "PROFORMA" || documento.Estado != "Proforma") { <span class="billing-type">@(documento.TipoDocumento == "PROFORMA" ? "Proforma" : "Factura")</span> }<partial name="_EstadoFactura" model="documento.Estado" /></div>
+                            <div class="billing-document-tags">@if (documento.TipoDocumento == "FACTURA") { <span class="billing-type">Facturado</span> } else if (documento.Estado != "Proforma") { <span class="billing-type">Proforma</span> }<partial name="_EstadoFactura" model="documento.Estado" /></div>
                         </td>
                         <td data-label="Cliente">@documento.Cliente</td>
                         <td data-label="Fecha de emisión"><time datetime="@documento.Fecha.ToString("s")">@documento.Fecha.ToString("MM/dd/yyyy")<small>@documento.Fecha.ToString("HH:mm")</small></time></td>

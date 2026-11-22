@@ -7,6 +7,9 @@ using System.Threading.RateLimiting;
 
 var configurarAcceso = args.Contains("--configurar-acceso");
 var builder = WebApplication.CreateBuilder(args.Where(a => a != "--configurar-acceso").ToArray());
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true)
+    .AddEnvironmentVariables()
+    .AddCommandLine(args.Where(a => a != "--configurar-acceso").ToArray());
 
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
@@ -17,6 +20,18 @@ builder.Services.AddControllersWithViews(options =>
     options.ModelBindingMessageProvider.SetUnknownValueIsInvalidAccessor(campo => $"El valor ingresado en {campo} no es válido.");
 });
 builder.Services.AddWashLabsServices(builder.Configuration);
+builder.Services.AddOptions<WashLabs.Services.RecordatoriosOpciones>()
+    .BindConfiguration("Recordatorios");
+builder.Services.AddScoped<WashLabs.Data.Repositories.RecordatorioRepository>();
+builder.Services.AddScoped<WashLabs.Services.EnviarRecordatorios>();
+builder.Services.AddHostedService<WashLabs.Services.ProgramadorRecordatorios>();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient(nameof(WashLabs.Services.TipoCambioHacienda), cliente =>
+{
+    cliente.BaseAddress = new Uri("https://api.hacienda.go.cr/");
+    cliente.Timeout = TimeSpan.FromSeconds(3);
+});
+builder.Services.AddScoped<WashLabs.Services.TipoCambioHacienda>();
 builder.Services.AddScoped<WashLabs.Services.IImagenService, WashLabs.Services.ImagenService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {

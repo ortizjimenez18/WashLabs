@@ -8,9 +8,13 @@ using WashLabs.Models;
 namespace WashLabs.Controllers;
 
 [Authorize(Roles = "Cliente,Encargado,Administrador")]
-public sealed class ReservasController(IReservaService reservas, IOperacionService operaciones) : Controller
+public sealed class ReservasController(IReservaService reservas, IOperacionService operaciones,
+    WashLabs.Services.TipoCambioHacienda hacienda) : Controller
 {
-    private int EncargadoUsuarioId => User.Id();
+    // Para evaluar otra sucursal desde una sesión administrativa, indicar aquí su encargado.
+    internal const int EncargadoDePruebaId = 0;
+    private int EncargadoUsuarioId => User.IsInRole("Administrador") && EncargadoDePruebaId > 0
+        ? EncargadoDePruebaId : User.Id();
 
     private async Task<bool> CargarFormulario(CrearReservaViewModel model, CancellationToken ct)
     {
@@ -53,7 +57,7 @@ public sealed class ReservasController(IReservaService reservas, IOperacionServi
         if (User.IsInRole("Cliente")) { model.Reserva.ClienteId = User.Id(); ModelState.Remove("Reserva.ClienteId"); }
         if (ModelState.IsValid)
         {
-            var resultado = await reservas.CrearAsync(model.Reserva, EncargadoUsuarioId, ct, User.Id());
+            var resultado = await reservas.CrearAsync(model.Reserva, EncargadoUsuarioId, ct, EncargadoUsuarioId);
             if (resultado.Exito)
             {
                 TempData["Mensaje"] = "Reserva registrada correctamente con su proforma. Puedes consultarla en Facturación.";
@@ -69,10 +73,11 @@ public sealed class ReservasController(IReservaService reservas, IOperacionServi
         return View(model);
     }
 
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(CancellationToken cancellationToken, string? cliente = null, DateOnly? fecha = null)
     {
         if (User.IsInRole("Cliente")) return View(await reservas.ListarClienteAsync(User.Id(), cancellationToken));
-        var historial = await reservas.ListarAsync(EncargadoUsuarioId, cancellationToken);
+        if (!ModelState.IsValid) return BadRequest();
+        var historial = await reservas.ListarAsync(EncargadoUsuarioId, cancellationToken, cliente, fecha);
         return historial is null ? NotFound("El usuario no tiene acceso al historial de reservas.") : View(historial);
     }
 
@@ -90,7 +95,7 @@ public sealed class ReservasController(IReservaService reservas, IOperacionServi
     public async Task<IActionResult> Completar(long id, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return BadRequest();
-        if (!await operaciones.CompletarCitaAsync(id, EncargadoUsuarioId, cancellationToken))
+        if (!await operaciones.CompletarCitaAsync(id, EncargadoUsuarioId, cancellationToken, await hacienda.VentaAsync(cancellationToken)))
         {
             TempData["Mensaje"] = "No se pudo completar el servicio. Revisa el estado, el vehículo y los permisos; si otra operación está en curso, intenta nuevamente.";
             return RedirectToAction(nameof(Detalle), new { id });
@@ -110,10 +115,22 @@ public sealed class ReservasController(IReservaService reservas, IOperacionServi
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = "Cliente")]
+    public async Task<IActionResult> Confirmar(long id, CancellationToken ct)
+    {
+        if (!ModelState.IsValid) return BadRequest();
+        if (await reservas.ObtenerClienteAsync(id, User.Id(), ct) is null) return NotFound();
+        TempData["Mensaje"] = await reservas.ConfirmarAsync(id, User.Id(), ct)
+            ? "Tu cita está confirmada."
+            : "Esta cita ya no se puede confirmar.";
+        return RedirectToAction(nameof(Detalle), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancelar(long id, CancellationToken ct)
     {
         if (!ModelState.IsValid) return BadRequest();
-        if (!await operaciones.CancelarCitaAsync(id, User.Id(), ct)) return NotFound();
+        if (!await operaciones.CancelarCitaAsync(id, EncargadoUsuarioId, ct)) return NotFound();
         TempData["Mensaje"] = "Reserva cancelada. Su proforma se conserva anulada.";
         return RedirectToAction(nameof(Detalle), new { id });
     }

@@ -5,8 +5,9 @@ namespace WashLabs.Data.Interfaces;
 
 public interface IReservaRepository
 {
+    Task<bool> ConfirmarAsync(long id, int clienteId, DateTime ahora, CancellationToken ct);
     Task<Usuario?> ObtenerEncargadoAsync(int encargadoId, CancellationToken cancellationToken);
-    Task<IReadOnlyList<Cita>> ListarAsync(int encargadoId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<Cita>> ListarAsync(int encargadoId, CancellationToken cancellationToken, string? cliente = null, DateOnly? fecha = null);
     Task<Cita?> ObtenerAsync(long id, int encargadoId, CancellationToken cancellationToken);
     Task<IReadOnlyList<Cita>> ListarClienteAsync(int clienteId, CancellationToken ct);
     Task<Cita?> ObtenerClienteAsync(long id, int clienteId, CancellationToken ct);

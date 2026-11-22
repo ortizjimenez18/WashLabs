@@ -10,11 +10,24 @@ namespace WashLabs.Data.Repositories;
 
 public sealed class ReservaRepository(WashLabsDbContext context) : IReservaRepository
 {
+    public async Task<bool> ConfirmarAsync(long id, int clienteId, DateTime ahora, CancellationToken ct)
+    {
+        var fecha = DateOnly.FromDateTime(ahora);
+        var hora = TimeOnly.FromDateTime(ahora);
+        var propias = context.Citas.Where(c => c.CitaId == id && c.ClienteId == clienteId &&
+            (c.Fecha > fecha || c.Fecha == fecha && c.HoraInicio > hora));
+        var confirmada = await context.EstadosCita.Where(e => e.Nombre == "Confirmada").Select(e => e.EstadoCitaId).SingleAsync(ct);
+        return await propias.Where(c => c.EstadoCita.Nombre == "Pendiente" || c.EstadoCita.Nombre == "Reprogramada")
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.EstadoCitaId, confirmada)
+                .SetProperty(c => c.FechaActualizacion, ahora), ct) == 1
+            || await propias.AnyAsync(c => c.EstadoCitaId == confirmada, ct);
+    }
+
     public async Task<IReadOnlyList<Cita>> ListarClienteAsync(int clienteId, CancellationToken ct) =>
         await context.Citas.AsNoTracking().Where(c => c.ClienteId == clienteId).Include(c => c.Cliente)
             .Include(c => c.Servicio).Include(c => c.EstadoCita).OrderByDescending(c => c.Fecha).ThenByDescending(c => c.HoraInicio).ToListAsync(ct);
     public Task<Cita?> ObtenerClienteAsync(long id, int clienteId, CancellationToken ct) =>
-        context.Citas.AsNoTracking().Include(c => c.Sucursal).Include(c => c.Servicio).Include(c => c.EstadoCita).Include(c => c.Vehiculo)
+        context.Citas.AsNoTracking().Include(c => c.Cliente).Include(c => c.Sucursal).Include(c => c.Servicio).Include(c => c.EstadoCita).Include(c => c.Vehiculo)
             .Include(c => c.Facturas)
             .Include(c => c.RespuestasReserva).ThenInclude(r => r.PreguntaReserva)
             .SingleOrDefaultAsync(c => c.CitaId == id && c.ClienteId == clienteId, ct);
@@ -33,7 +46,8 @@ public sealed class ReservaRepository(WashLabsDbContext context) : IReservaRepos
         var servicios = await context.SucursalServicios.AsNoTracking()
             .Where(s => s.SucursalId == sucursal.SucursalId && s.Activo && s.Servicio.Activo)
             .OrderBy(s => s.Servicio.Nombre)
-            .Select(s => new ServicioReservaDTO(s.ServicioId, s.Servicio.Nombre, s.Servicio.DuracionMinutos)).ToListAsync(ct);
+            .Select(s => new ServicioReservaDTO(s.ServicioId, s.Servicio.Nombre, s.Servicio.DuracionMinutos,
+                s.PrecioSucursal ?? s.Servicio.TarifaBase)).ToListAsync(ct);
         var preguntas = await context.PreguntasReserva.AsNoTracking().Where(p => p.Activa).OrderBy(p => p.Orden)
             .Select(p => new PreguntaReservaDTO(p.PreguntaReservaId, p.Pregunta)).ToListAsync(ct);
         return new(sucursal.Nombre, servicios, preguntas, sucursal.SucursalId, sucursales);
@@ -83,7 +97,7 @@ public sealed class ReservaRepository(WashLabsDbContext context) : IReservaRepos
                 && c.VehiculoId == solicitud.VehiculoId && c.SucursalId == solicitud.SucursalId
                 && c.ServicioId == solicitud.ServicioId && c.Fecha == solicitud.Fecha && c.HoraInicio == solicitud.HoraInicio
                 && c.EstadoCita.Nombre != "Cancelada" && c.EstadoCita.Nombre != "No asistió"
-                && c.Facturas != null).Select(c => (long?)c.CitaId).SingleOrDefaultAsync(ct);
+                && c.Facturas != null).Select(c => (long?)c.CitaId).FirstOrDefaultAsync(ct);
             if (repetida.HasValue) return new(true, repetida.Value, null);
             var preguntas = await context.PreguntasReserva.AsNoTracking().Where(p => p.Activa).Select(p => p.PreguntaReservaId).ToListAsync(ct);
             if (solicitud.Respuestas.Select(r => r.PreguntaId).Distinct().Count() != solicitud.Respuestas.Count
@@ -148,13 +162,19 @@ public sealed class ReservaRepository(WashLabsDbContext context) : IReservaRepos
     public Task<Usuario?> ObtenerEncargadoAsync(int encargadoId, CancellationToken cancellationToken) =>
         Encargados(encargadoId).Include(u => u.Sucursal).SingleOrDefaultAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Cita>> ListarAsync(int encargadoId, CancellationToken cancellationToken) =>
-        await DeEncargado(encargadoId).Include(c => c.Cliente).Include(c => c.Servicio)
+    public async Task<IReadOnlyList<Cita>> ListarAsync(int encargadoId, CancellationToken cancellationToken, string? cliente = null, DateOnly? fecha = null)
+    {
+        var consulta = DeEncargado(encargadoId);
+        if (!string.IsNullOrWhiteSpace(cliente))
+            consulta = consulta.Where(c => c.Cliente.NombreCompleto.Contains(cliente) || c.Cliente.Correo.Contains(cliente));
+        if (fecha.HasValue) consulta = consulta.Where(c => c.Fecha == fecha.Value);
+        return await consulta.Include(c => c.Cliente).Include(c => c.Servicio)
             .Include(c => c.EstadoCita).OrderByDescending(c => c.Fecha)
             .ThenByDescending(c => c.HoraInicio).ThenByDescending(c => c.CitaId).ToListAsync(cancellationToken);
+    }
 
     public Task<Cita?> ObtenerAsync(long id, int encargadoId, CancellationToken cancellationToken) =>
-        DeEncargado(encargadoId).Include(c => c.Sucursal).Include(c => c.Servicio).Include(c => c.EstadoCita).Include(c => c.Vehiculo)
+        DeEncargado(encargadoId).Include(c => c.Cliente).Include(c => c.Sucursal).Include(c => c.Servicio).Include(c => c.EstadoCita).Include(c => c.Vehiculo)
             .Include(c => c.Facturas)
             .Include(c => c.RespuestasReserva).ThenInclude(r => r.PreguntaReserva)
             .SingleOrDefaultAsync(c => c.CitaId == id, cancellationToken);

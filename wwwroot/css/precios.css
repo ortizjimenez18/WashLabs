@@ -1,11 +1,20 @@
 :root {
-    --washlabs-price-color: #00DFFF;
+    --washlabs-price-color: #000;
 }
 
 /* Solo importes: las etiquetas, cantidades y porcentajes conservan su color. */
 .washlabs-price,
+input[name="Precio"],
+input[name="TarifaBase"],
+.billing-add-product select:is(#productoId, #servicioId),
 .servicio-datos .servicio-precio,
 .services-section .experience-service .washlabs-price,
 .experience-service:nth-child(2n) .washlabs-price {
     color: var(--washlabs-price-color);
+}
+
+.washlabs-price,
+.servicio-datos .servicio-precio,
+.billing-add-product select {
+    font-weight: 700;
 }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WashLabs.Models.DTOs;
 
-public sealed record ClienteOpcionDTO(int ClienteId, string Nombre);
+public sealed record ClienteOpcionDTO(int ClienteId, string Nombre, string? Correo = null);
 public sealed record VehiculoDTO(int VehiculoId, int ClienteId, string Cliente, string Matricula,
     string Marca, string Modelo, short? Anio, string? Color, string CategoriaTamano);
 public sealed class RegistroVehiculoDTO

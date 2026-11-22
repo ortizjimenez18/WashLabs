@@ -10,7 +10,7 @@ public sealed class OperacionService(IOperacionRepository repository) : IOperaci
     private static VehiculoDTO Map(Vehiculo v) => new(v.VehiculoId, v.ClienteId, v.Cliente.NombreCompleto,
         v.Matricula, v.Marca, v.Modelo, v.Anio, v.Color, v.CategoriaTamano);
     public async Task<IReadOnlyList<ClienteOpcionDTO>> ClientesAsync(CancellationToken ct = default) =>
-        (await repository.ClientesAsync(ct)).Select(u => new ClienteOpcionDTO(u.UsuarioId, u.NombreCompleto)).ToArray();
+        (await repository.ClientesAsync(ct)).Select(u => new ClienteOpcionDTO(u.UsuarioId, u.NombreCompleto, u.Correo)).ToArray();
     public async Task<IReadOnlyList<VehiculoDTO>> VehiculosAsync(CancellationToken ct = default, int? clienteId = null) =>
         (await repository.VehiculosAsync(ct, clienteId)).Select(Map).ToArray();
     public async Task<RegistroVehiculoResultadoDTO> RegistrarVehiculoAsync(RegistroVehiculoDTO solicitud, CancellationToken ct = default)
@@ -65,8 +65,8 @@ public sealed class OperacionService(IOperacionRepository repository) : IOperaci
             p.OpcionesAsistentePreguntaAsistente.OrderBy(o => o.Orden).ThenBy(o => o.OpcionAsistenteId)
                 .Select(o => new OpcionAsistenteDTO(o.OpcionAsistenteId, o.TextoOpcion, o.RespuestaFinal, o.SiguientePreguntaId)).ToArray());
     }
-    public Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct = default) =>
-        id > 0 && encargadoId > 0 ? repository.CompletarCitaAsync(id, encargadoId, ct) : Task.FromResult(false);
+    public Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct = default, TipoCambioVentaDTO? tipoCambio = null) =>
+        id > 0 && encargadoId > 0 ? repository.CompletarCitaAsync(id, encargadoId, ct, tipoCambio) : Task.FromResult(false);
 
     public Task<bool> CancelarCitaAsync(long id, int usuarioId, CancellationToken ct = default) =>
         id > 0 && usuarioId > 0 ? repository.CancelarCitaAsync(id, usuarioId, ct) : Task.FromResult(false);

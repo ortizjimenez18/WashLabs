@@ -97,6 +97,23 @@ internal static class PruebasNavegadorFacturacion
                     await Task.Delay(200);
                     var sinDesborde = await Evaluar("document.documentElement.scrollWidth <= window.innerWidth + 1");
                     verificar(sinDesborde.GetBoolean(), $"Navegador: {pagina} sin desbordamiento horizontal a {ancho}px");
+                    if (pagina == "detalle")
+                    {
+                        var importes = await Evaluar("""
+                            (() => {
+                                const crc = document.querySelector('.billing-grand-total dd');
+                                const usd = document.querySelector('.billing-usd dd');
+                                const cantidad = document.querySelector('[data-previous] input[name=cantidad]');
+                                cantidad.value = '5';
+                                cantidad.dispatchEvent(new Event('input', { bubbles:true }));
+                                const resumen = cantidad.closest('td').querySelector('[data-line-preview]').textContent;
+                                return getComputedStyle(crc).color === 'rgb(0, 0, 0)' &&
+                                    (!usd || (parseFloat(getComputedStyle(crc).fontSize) > parseFloat(getComputedStyle(usd).fontSize)
+                                        && resumen.includes('USD'))) && resumen.includes('IVA') && resumen.includes('₡');
+                            })()
+                            """);
+                        verificar(importes.GetBoolean(), $"Navegador: importes legibles y cálculo inmediato a {ancho}px");
+                    }
                     var captura = await Comando("Page.captureScreenshot", new { format = "png", captureBeyondViewport = true });
                     await File.WriteAllBytesAsync(Path.Combine(carpeta, $"{pagina}-{ancho}.png"), Convert.FromBase64String(captura.GetProperty("data").GetString()!));
                 }

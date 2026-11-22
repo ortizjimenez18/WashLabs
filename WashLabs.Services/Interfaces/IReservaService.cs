@@ -4,7 +4,8 @@ namespace WashLabs.Services.Interfaces;
 
 public interface IReservaService
 {
-    Task<ReservasHistorialDTO?> ListarAsync(int encargadoId, CancellationToken cancellationToken = default);
+    Task<bool> ConfirmarAsync(long id, int clienteId, CancellationToken ct);
+    Task<ReservasHistorialDTO?> ListarAsync(int encargadoId, CancellationToken cancellationToken = default, string? cliente = null, DateOnly? fecha = null);
     Task<ReservaDTO?> ObtenerAsync(long id, int encargadoId, CancellationToken cancellationToken = default);
     Task<ReservasHistorialDTO> ListarClienteAsync(int clienteId, CancellationToken ct = default);
     Task<ReservaDTO?> ObtenerClienteAsync(long id, int clienteId, CancellationToken ct = default);

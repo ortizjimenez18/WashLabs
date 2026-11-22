@@ -161,14 +161,14 @@ internal static class PruebasFacturador
         Verificar(linea.Subtotal == 145.75m && linea.Impuesto == 18.95m && detalle.Subtotal == 1145.75m && detalle.Total == 1294.70m,
             "Cambio actualiza subtotal, IVA y total persistidos");
         Verificar(await Cambiar(lineaProducto, 3) && (await Detalle()).Lineas.Count == 2, "Reintentar cambio absoluto no duplica unidades");
-        Verificar(!await Cambiar(lineaProducto, 0) && !await Cambiar(lineaProducto, 1.5m), "Cantidades inválidas rechazadas");
+        Verificar(!await Cambiar(lineaProducto, -1) && !await Cambiar(lineaProducto, 1.5m), "Cantidades inválidas rechazadas");
         Verificar(!await Cambiar(lineaServicio, 2) && !await Quitar(lineaServicio), "Servicio original no se modifica ni se elimina");
         Verificar(!await Cambiar(lineaProducto, 4, cliente.UsuarioId) && !await Quitar(lineaProducto, cliente.UsuarioId), "Cliente no edita ni quita productos");
         var ajenaLinea = (await Detalle(otraSede.FacturaId)).Lineas.Single(l => l.ProductoId == producto.ProductoId).DetalleFacturaId;
         Verificar(!await Cambiar(ajenaLinea, 2, facturaId: otraSede.FacturaId) && !await Quitar(ajenaLinea, facturaId: otraSede.FacturaId), "Encargado no cambia documentos de otra sucursal");
         Verificar(await Agregar(adicional.ProductoId, 2) && (await Detalle()).Lineas.Count == 3, "Agregar producto mantiene la misma orden");
         var lineaAdicional = (await Detalle()).Lineas.Single(l => l.ProductoId == adicional.ProductoId).DetalleFacturaId;
-        Verificar(await Quitar(lineaAdicional) && await Quitar(lineaAdicional), "Quitar producto y repetir eliminación es seguro");
+        Verificar(await Cambiar(lineaAdicional, 0) && await Quitar(lineaAdicional), "Cantidad cero elimina la línea y repetir eliminación es seguro");
         Verificar((await Detalle()).Lineas.Count == 2 && (await Detalle()).Total == 1294.70m, "Eliminar actualiza totales sin perder servicio");
         var antes = await Detalle();
         await using (var falla = new WashLabsDbContext(Opciones().AddInterceptors(new FallarCabecera()).Options))

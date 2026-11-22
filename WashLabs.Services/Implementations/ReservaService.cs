@@ -8,6 +8,8 @@ namespace WashLabs.Services.Implementations;
 
 public sealed class ReservaService(IReservaRepository repository) : IReservaService
 {
+    public Task<bool> ConfirmarAsync(long id, int clienteId, CancellationToken ct) =>
+        repository.ConfirmarAsync(id, clienteId, DisponibilidadReserva.Ahora, ct);
     public async Task<ReservasHistorialDTO> ListarClienteAsync(int clienteId, CancellationToken ct = default) =>
         new("", "", (await repository.ListarClienteAsync(clienteId, ct)).Select(ReservaMapper.ToResumenDTO).ToArray(), true);
     public async Task<ReservaDTO?> ObtenerClienteAsync(long id, int clienteId, CancellationToken ct = default)
@@ -28,17 +30,15 @@ public sealed class ReservaService(IReservaRepository repository) : IReservaServ
         foreach (var respuesta in solicitud.Respuestas)
             if (!Validator.TryValidateObject(respuesta, new ValidationContext(respuesta), errores, true))
                 return new(false, null, errores[^1].ErrorMessage);
-        if (solicitud.Fecha!.Value.ToDateTime(solicitud.HoraInicio!.Value) <= DisponibilidadReserva.Ahora)
-            return new(false, null, "Selecciona una fecha y hora futuras.");
         return await repository.CrearAsync(solicitud, encargadoId, creadorId ?? encargadoId, ct);
     }
-    public async Task<ReservasHistorialDTO?> ListarAsync(int encargadoId, CancellationToken cancellationToken = default)
+    public async Task<ReservasHistorialDTO?> ListarAsync(int encargadoId, CancellationToken cancellationToken = default, string? cliente = null, DateOnly? fecha = null)
     {
         var encargado = await repository.ObtenerEncargadoAsync(encargadoId, cancellationToken);
         if (encargado is null) return null;
-        var reservas = await repository.ListarAsync(encargadoId, cancellationToken);
+        var reservas = await repository.ListarAsync(encargadoId, cancellationToken, cliente?.Trim(), fecha);
         return new(encargado.NombreCompleto, encargado.Sucursal?.Nombre ?? "Todas las sucursales",
-            reservas.Select(ReservaMapper.ToResumenDTO).ToArray());
+            reservas.Select(ReservaMapper.ToResumenDTO).ToArray(), ClienteFiltro: cliente, FechaFiltro: fecha);
     }
 
     public async Task<ReservaDTO?> ObtenerAsync(long id, int encargadoId, CancellationToken cancellationToken = default)

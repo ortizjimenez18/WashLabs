@@ -30,6 +30,12 @@ internal static class PruebasHttpAutenticadas
         inicio.ArgumentList.Add("--urls"); inicio.ArgumentList.Add("http://127.0.0.1:5291");
         inicio.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         inicio.Environment["ConnectionStrings__WashLabsDB"] = cadena;
+        var sinHacienda = Environment.GetEnvironmentVariable("WASHLABS_TEST_HACIENDA_OFFLINE") == "1";
+        if (sinHacienda)
+        {
+            inicio.Environment["HTTPS_PROXY"] = "http://127.0.0.1:1";
+            inicio.Environment["NO_PROXY"] = "localhost,127.0.0.1";
+        }
         using var proceso = Process.Start(inicio) ?? throw new InvalidOperationException("No se pudo iniciar WashLabs.");
         var salida = proceso.StandardOutput.ReadToEndAsync();
         var errores = proceso.StandardError.ReadToEndAsync();
@@ -90,7 +96,7 @@ internal static class PruebasHttpAutenticadas
                         Verificar(!contenido.Contains("PasswordHash") && usuarios.All(u => !contenido.Contains(u.PasswordHash)), "HTML no expone hashes");
                         if (ruta == "/Usuarios")
                         {
-                            Verificar(contenido.Contains("<h1>Lista de Usuarios (María Paula Murillo Rosales)</h1>")
+                            Verificar(contenido.Contains("<h1>Lista de Usuarios</h1>")
                                 && Regex.Matches(contenido, "data-user-id=").Count == directorio.Count, "Título exacto y todos los usuarios visibles en Razor (incluye inactivos)");
                             foreach (var registro in directorio)
                             {
@@ -121,9 +127,9 @@ internal static class PruebasHttpAutenticadas
                     $"{usuario.Rol.Nombre}: autorización de mantenimiento");
                 var html = await cliente.GetStringAsync("/Reservas");
                 Verificar(html.Contains("/Usuarios") == (usuario.Rol.Nombre == "Administrador"), "Menú Usuarios respeta rol " + usuario.Rol.Nombre);
-                var documento = await db.Facturas.AsNoTracking().Where(f => usuario.Rol.Nombre == "Administrador"
+                var documento = await db.Facturas.AsNoTracking().Where(f => f.CitaId.HasValue && (usuario.Rol.Nombre == "Administrador"
                     || usuario.Rol.Nombre == "Cliente" && f.ClienteId == usuario.UsuarioId
-                    || usuario.Rol.Nombre == "Encargado" && f.SucursalId == usuario.SucursalId)
+                    || usuario.Rol.Nombre == "Encargado" && f.SucursalId == usuario.SucursalId))
                     .OrderByDescending(f => f.FacturaId).FirstAsync();
                 var detalleDocumento = await cliente.GetStringAsync("/Facturacion/Detalle/" + documento.FacturaId);
                 Verificar(detalleDocumento.Contains(documento.TipoDocumento) && detalleDocumento.Contains("IVA"),
@@ -189,9 +195,42 @@ internal static class PruebasHttpAutenticadas
                     using var repetir = await cliente.PostAsync("/Reservas/Crear", new FormUrlEncodedContent(campos));
                     Verificar(repetir.StatusCode == HttpStatusCode.Redirect && await db.Facturas.CountAsync(f => f.CitaId == reservaHttp) == 1,
                         "HTTP: doble envío no duplica proforma");
+                    var detallePropio = await cliente.GetStringAsync(crear.Headers.Location!.ToString());
+                    Verificar(detallePropio.Contains("Confirmar cita"), "HTTP: el cliente ve la acción de confirmar en el detalle");
+                    var confirmarUrl = "/Reservas/Confirmar/" + reservaHttp;
+                    var confirmarFormulario = new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(detallePropio) };
+                    using var confirmar = await cliente.PostAsync(confirmarUrl, new FormUrlEncodedContent(confirmarFormulario));
+                    using var confirmarOtraVez = await cliente.PostAsync(confirmarUrl, new FormUrlEncodedContent(confirmarFormulario));
+                    Verificar(confirmar.StatusCode == HttpStatusCode.Redirect && confirmarOtraVez.StatusCode == HttpStatusCode.Redirect &&
+                        await db.Citas.AnyAsync(c => c.CitaId == reservaHttp && c.EstadoCita.Nombre == "Confirmada"),
+                        "HTTP: la confirmación del cliente persiste y admite reintento");
                 }
                 if (usuario.Rol.Nombre == "Encargado")
                 {
+                    var referencia = await db.Citas.AsNoTracking().SingleAsync(c => c.CitaId == reservaHttp);
+                    var formulario = await cliente.GetStringAsync($"/Reservas/Crear?servicioId={referencia.ServicioId}");
+                    var servicioReservas = new WashLabs.Services.Implementations.ReservaService(new WashLabs.Data.Repositories.ReservaRepository(db));
+                    var hora = (await servicioReservas.HorariosAsync(usuario.UsuarioId, referencia.ServicioId, referencia.Fecha, default, referencia.SucursalId))
+                        .First(h => h > referencia.HoraFin);
+                    var campos = new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(formulario),
+                        ["Reserva.SucursalId"] = referencia.SucursalId.ToString(), ["Reserva.ClienteId"] = referencia.ClienteId.ToString(),
+                        ["Reserva.VehiculoId"] = referencia.VehiculoId.ToString(), ["Reserva.ServicioId"] = referencia.ServicioId.ToString(),
+                        ["Reserva.Fecha"] = referencia.Fecha.ToString("yyyy-MM-dd"), ["Reserva.HoraInicio"] = hora.ToString("HH:mm") };
+                    var preguntas = await db.PreguntasReserva.Where(p => p.Activa).OrderBy(p => p.Orden).ToListAsync();
+                    for (var i = 0; i < preguntas.Count; i++)
+                    {
+                        campos[$"Reserva.Respuestas[{i}].PreguntaId"] = preguntas[i].PreguntaReservaId.ToString();
+                        campos[$"Reserva.Respuestas[{i}].Respuesta"] = "Prueba encargado";
+                    }
+                    using var crear = await cliente.PostAsync("/Reservas/Crear", new FormUrlEncodedContent(campos));
+                    Verificar(html.Contains("/Reservas/Crear") && crear.StatusCode == HttpStatusCode.Redirect, "HTTP: encargado crea reserva desde su historial");
+                    reservaHttp = await db.Citas.Where(c => c.VehiculoId == referencia.VehiculoId && c.Fecha == referencia.Fecha && c.HoraInicio == hora)
+                        .Select(c => c.CitaId).SingleAsync();
+                    proformaHttp = await db.Facturas.Where(f => f.CitaId == reservaHttp).Select(f => f.FacturaId).SingleAsync();
+                    var reservaCreada = WebUtility.HtmlDecode(await cliente.GetStringAsync(crear.Headers.Location!.ToString()));
+                    Verificar(reservaCreada.Contains("Reserva registrada correctamente") &&
+                        reservaCreada.Contains("Prueba encargado") && reservaCreada.Contains("/Facturacion/Detalle/" + proformaHttp),
+                        "HTTP: detalle confirma la reserva, muestra respuestas y enlaza a la proforma");
                     var proformaHtml = await cliente.GetStringAsync("/Facturacion/Detalle/" + proformaHttp);
                     Verificar(proformaHtml.Contains("Agregar producto"), "HTTP: encargado dispone del formulario de productos");
                     var productos = await db.Productos.AsNoTracking().Where(p => p.Nombre.StartsWith("TST producto ")).OrderByDescending(p => p.ProductoId).Take(2).ToListAsync();
@@ -227,18 +266,55 @@ internal static class PruebasHttpAutenticadas
                     if (Environment.GetEnvironmentVariable("WASHLABS_VISUAL_TESTS") == "1")
                         await PruebasNavegadorFacturacion.EjecutarAsync(cliente.BaseAddress!, usuario.Correo, clave, proformaHttp!.Value, Verificar);
                     var reservaHtml = await cliente.GetStringAsync("/Reservas/Detalle/" + reservaHttp);
+                    var proformaFinal = WebUtility.HtmlDecode(await cliente.GetStringAsync("/Facturacion/Detalle/" + proformaHttp));
+                    var cotizacion = Regex.Match(proformaFinal, "name=\"cotizacion\" value=\"([^\"]+)\"").Groups[1].Value;
+                    Verificar(cotizacion.Length > 0 && (sinHacienda ? proformaFinal.Contains("Equivalente en dólares no disponible")
+                        : proformaFinal.Contains("Tipo de cambio de venta · Hacienda")), "HTTP: la proforma refleja disponibilidad real de Hacienda");
                     using var finalizar = await cliente.PostAsync("/Facturacion/CompletarCita/" + proformaHttp,
-                        new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(reservaHtml) }));
+                        new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(reservaHtml), ["cotizacion"] = cotizacion }));
                     Verificar(finalizar.StatusCode == HttpStatusCode.Redirect
                         && await db.Facturas.AnyAsync(f => f.FacturaId == proformaHttp && f.TipoDocumento == "FACTURA" && f.EstadoFactura.Nombre == "Pendiente")
                         && await db.DetallesFactura.CountAsync(d => d.FacturaId == proformaHttp) == 3
                         && await db.MovimientosWashPoints.CountAsync(m => m.CitaId == reservaHttp && m.TipoMovimiento == "ACUMULA") == 1,
                         "HTTP: completar conserva tres líneas, emite factura y acredita lavado");
+                    var emitida = await db.Facturas.AsNoTracking().Include(f => f.DetallesFactura).SingleAsync(f => f.FacturaId == proformaHttp);
+                    var finalHtml = WebUtility.HtmlDecode(await cliente.GetStringAsync("/Facturacion/Detalle/" + proformaHttp));
+                    Verificar(emitida.Total == emitida.DetallesFactura.Sum(l => (l.Subtotal ?? 0) + (l.Impuesto ?? 0))
+                        && emitida.Impuesto == emitida.DetallesFactura.Sum(l => l.Impuesto ?? 0), "HTTP: importes e IVA de la factura coinciden con SQL");
+                    Verificar(sinHacienda ? emitida.TipoCambioVenta is null && emitida.FechaTipoCambioVenta is null &&
+                            finalHtml.Contains("Equivalente en dólares no disponible")
+                        : emitida.TipoCambioVenta is > 0 && emitida.FechaTipoCambioVenta.HasValue &&
+                            finalHtml.Contains("USD " + new WashLabs.Models.DTOs.TipoCambioVentaDTO(emitida.TipoCambioVenta.Value,
+                                emitida.FechaTipoCambioVenta.Value).Equivalente(emitida.Total).ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))),
+                        "HTTP: reabrir conserva el equivalente emitido o la ausencia de tasa");
+                    var vehiculo = await db.Citas.AsNoTracking().Where(c => c.CitaId == reservaHttp).Select(c => c.Vehiculo).SingleAsync();
+                    var ficha = WebUtility.HtmlDecode(await cliente.GetStringAsync("/Vehiculos/Detalle/" + vehiculo.VehiculoId));
+                    Verificar(ficha.Contains("loyalty-card-header") && ficha.Contains(vehiculo.Matricula) && ficha.Contains("Editar vehículo"), "HTTP: vehículo previo muestra ficha WashPoints y acción de editar");
+                    var historialEncargado = await cliente.GetStringAsync("/Reservas?cliente=" + Uri.EscapeDataString(usuarios.Single(u => u.UsuarioId == emitida.ClienteId).NombreCompleto)
+                        + "&fecha=" + (await db.Citas.Where(c => c.CitaId == reservaHttp).Select(c => c.Fecha).SingleAsync()).ToString("yyyy-MM-dd"));
+                    Verificar(historialEncargado.Contains("/Reservas/Detalle/" + reservaHttp), "HTTP: el encargado localiza la cita con ambos filtros");
                     using var repetir = await cliente.PostAsync("/Reservas/Completar/" + reservaHttp,
                         new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(reservaHtml) }));
                     Verificar(repetir.StatusCode == HttpStatusCode.Redirect
                         && await db.MovimientosWashPoints.CountAsync(m => m.CitaId == reservaHttp && m.TipoMovimiento == "ACUMULA") == 1,
                         "HTTP: doble finalización mantiene un lavado");
+
+                    var nueva = await cliente.GetStringAsync("/Facturacion/Crear");
+                    var solicitud = Regex.Match(nueva, "name=\"Solicitud.SolicitudId\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+                    var tarifa = await db.Citas.AsNoTracking().Where(c => c.CitaId == reservaHttp).Select(c => c.ServicioId).SingleAsync();
+                    var emision = new Dictionary<string, string> { ["__RequestVerificationToken"] = Token(nueva),
+                        ["Solicitud.SolicitudId"] = solicitud, ["Solicitud.SucursalId"] = usuario.SucursalId!.Value.ToString(),
+                        ["Solicitud.ClienteId"] = emitida.ClienteId.ToString(),
+                        ["Solicitud.Lineas[0].Articulo"] = $"P:{productos[0].ProductoId}", ["Solicitud.Lineas[0].Cantidad"] = "2",
+                        ["Solicitud.Lineas[1].Articulo"] = $"S:{tarifa}", ["Solicitud.Lineas[1].Cantidad"] = "1" };
+                    using var directa = await cliente.PostAsync("/Facturacion/Crear", new FormUrlEncodedContent(emision));
+                    using var directaRepetida = await cliente.PostAsync("/Facturacion/Crear", new FormUrlEncodedContent(emision));
+                    Verificar(directa.StatusCode == HttpStatusCode.Redirect && directa.Headers.Location == directaRepetida.Headers.Location
+                        && Guid.TryParse(solicitud, out _), "HTTP: factura independiente mixta y reenvío redirigen al mismo documento");
+                    var solicitudId = Guid.Parse(solicitud);
+                    var venta = await db.Facturas.AsNoTracking().Include(f => f.DetallesFactura).SingleAsync(f => f.SolicitudEmisionId == solicitudId);
+                    Verificar(venta.CitaId is null && venta.SucursalId == usuario.SucursalId && venta.DetallesFactura.Count == 2 &&
+                        venta.Total == venta.DetallesFactura.Sum(l => (l.Subtotal ?? 0) + (l.Impuesto ?? 0)), "SQL: venta directa conserva las líneas y los importes calculados");
                 }
                 using var sinToken = await cliente.PostAsync("/Cuenta/Salir", new FormUrlEncodedContent(new Dictionary<string, string>()));
                 Verificar(sinToken.StatusCode == HttpStatusCode.BadRequest, "Logout sin token rechazado");

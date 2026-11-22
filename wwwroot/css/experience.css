@@ -156,6 +156,11 @@ label,.result-count { font-size:15px; }
 .breadcrumbs { font-size:14px; }
 .document-heading>.muted,.context-bar,.notice { font-size:15px; }
 .loyalty-card .eyebrow,.loyalty-identity .meta-label,.loyalty-identity p,.points-total span { font-size:14px; }
+.vehicle-detail-card { max-width:640px; }
+.vehicle-detail-card .detail-actions { display:flex; flex-wrap:wrap; align-items:center; gap:16px 24px; }
+.vehicle-detail-data { display:grid; grid-template-columns:auto minmax(0, 1fr); gap:12px 24px; border-top:1px solid var(--line); padding-top:20px; }
+.vehicle-detail-data dt { font-weight:700; }
+.vehicle-detail-data dd { margin:0; overflow-wrap:anywhere; }
 .loyalty-remaining { font-size:16px; }
 .assistant-topic p,.assistant-answers details>p { font-size:16px; }
 .eyebrow { font-size:13px; }
@@ -163,8 +168,11 @@ label,.result-count { font-size:15px; }
 .account-links a { grid-template-columns:1fr; }
 .reservation-actions { display:flex; justify-content:flex-end; margin-bottom:24px; }
 .booking-form { max-width:1000px; }
+.booking-branch-form .button { margin-block-start:16px; }
 .booking-picker-button { margin-top:8px; border:1px solid var(--line); border-radius:5px; padding:8px 12px; background:white; color:var(--ink); font:inherit; cursor:pointer; }
 .booking-form .detail-actions { display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
+.reservation-detail-actions { display:flex; flex-wrap:wrap; align-items:center; gap:16px 24px; }
+.reservation-detail-actions form { margin:0; }
 .form-helper { display:inline-block; margin-top:12px; }
 textarea { width:100%; border:1px solid #b5bbc1; border-radius:5px; padding:12px; font:inherit; color:var(--ink); background:var(--paper); resize:vertical; }
 .booking-questions { border:0; margin:32px 0; padding:0; display:grid; gap:22px; }

@@ -42,6 +42,8 @@ internal static class PruebasIntegracionFacturacion
         var servicio = new Servicio { Nombre = "TST integración " + marca, Descripcion = "Servicio de prueba", TarifaBase = 1000m,
             DuracionMinutos = 60, TipoLavado = "EXTERIOR", NivelDetalle = "BASICO", Activo = true };
         var tarifa = new SucursalServicio { SucursalId = encargado.SucursalId!.Value, Servicio = servicio, PrecioSucursal = 1234.56m, Activo = true };
+        var complemento = new Servicio { Nombre = "TST complemento " + marca, Descripcion = "Servicio adicional",
+            TarifaBase = 125m, DuracionMinutos = 15, TipoLavado = "EXTERIOR", NivelDetalle = "BASICO", Activo = true };
         var vehiculo = new Vehiculo { ClienteId = cliente.UsuarioId, Matricula = "TST" + marca.ToUpperInvariant(),
             Marca = "Pruebas", Modelo = "Integración", CategoriaTamano = "MEDIANO", Activo = true };
         var categoria = new CategoriaProducto { Nombre = "TST " + marca, Activa = true };
@@ -50,6 +52,7 @@ internal static class PruebasIntegracionFacturacion
         var productoB = new Producto { CategoriaProducto = categoria, Nombre = "TST producto B " + marca,
             Descripcion = "Prueba", Precio = 79.99m, Activo = true };
         db.SucursalServicios.Add(tarifa);
+        db.SucursalServicios.Add(new SucursalServicio { SucursalId = tarifa.SucursalId, Servicio = complemento, PrecioSucursal = 140m, Activo = true });
         db.Vehiculos.Add(vehiculo);
         db.Productos.AddRange(productoA, productoB);
         for (byte dia = 1; dia <= 7; dia++)
@@ -89,6 +92,17 @@ internal static class PruebasIntegracionFacturacion
         Verificar(proforma.DetallesFactura.Single().ServicioId == servicio.ServicioId && proforma.DetallesFactura.Single().PrecioUnitario == 1234.56m,
             "Servicio correcto y prioridad del precio de sucursal");
         Verificar(proforma.Subtotal == 1234.56m && proforma.Impuesto == 160.49m && proforma.Total == 1395.05m, "Totales de proforma e IVA 13%");
+        await using (var ctx = Contexto())
+        {
+            var facturas = new FacturaRepository(ctx);
+            Verificar(await facturas.AgregarServicioAsync(proforma.FacturaId, complemento.ServicioId, 2, encargado.UsuarioId, default),
+                "La proforma admite otro servicio de la sucursal");
+            var linea = (await Documento(citaId)).DetallesFactura.Single(d => d.ServicioId == complemento.ServicioId);
+            Verificar(linea.PrecioUnitario == 140m && linea.Subtotal == 280m && linea.Impuesto == 36.40m,
+                "El servicio adicional usa tarifa de sucursal y calcula IVA");
+            Verificar(await facturas.CambiarCantidadAsync(proforma.FacturaId, linea.DetalleFacturaId, 0, encargado.UsuarioId, default),
+                "El servicio adicional se puede quitar sin tocar el servicio reservado");
+        }
         var repetida = await Crear(solicitud);
         Verificar(repetida.CitaId == citaId && await db.Facturas.CountAsync(f => f.CitaId == citaId) == 1, "Repetir reserva conserva un documento");
         var invalidada = Solicitud(1);
@@ -102,6 +116,13 @@ internal static class PruebasIntegracionFacturacion
         Verificar(!(await Crear(invalidada)).Exito, "Fecha pasada rechazada");
         invalidada = Solicitud(1); invalidada.HoraInicio = new TimeOnly(22, 0);
         Verificar(!(await Crear(invalidada)).Exito, "Horario fuera de apertura rechazado");
+        invalidada = Solicitud(1); invalidada.HoraInicio = new TimeOnly(17, 30);
+        Verificar(!(await Crear(invalidada, encargado.UsuarioId)).Exito, "El servicio de 60 minutos no cabe si faltan 30 para cerrar");
+        db.BloqueosAgenda.Add(new BloqueoAgenda { SucursalId = tarifa.SucursalId, Fecha = fecha.AddDays(20),
+            DiaCompleto = true, Motivo = "TST bloqueo Avance 5", CreadoPorUsuarioId = encargado.UsuarioId });
+        await db.SaveChangesAsync();
+        Verificar(!(await Crear(Solicitud(20), encargado.UsuarioId)).Exito, "El servidor rechaza la reserva en el día bloqueado");
+        Verificar((await Crear(Solicitud(19), encargado.UsuarioId)).Exito, "El encargado registra una cita en su propia sucursal");
         var colision = Solicitud(0); colision.HoraInicio = new TimeOnly(9, 15);
         Verificar(!(await Crear(colision)).Exito, "Reservas incompatibles rechazadas");
         await using (var falla = new WashLabsDbContext(Opciones().AddInterceptors(new FallarDocumento(true)).Options))
@@ -189,6 +210,27 @@ internal static class PruebasIntegracionFacturacion
                 Cantidad = 1, PrecioUnitario = 1000m, PorcentajeImpuesto = 13m }] });
         await db.SaveChangesAsync();
         Verificar(!await Completar(otraCita.CitaId) && await Movimientos(otraCita.CitaId) == 0, "Encargado no completa otra sucursal");
+        var otroEncargado = new Usuario { RolId = encargado.RolId, SucursalId = otraSucursal.SucursalId, Activo = true,
+            NombreCompleto = "TST encargado " + marca, Correo = $"sede-{marca}@example.invalid",
+            Telefono = "00000000", Direccion = "Prueba", PasswordHash = "ACCESO_NO_CONFIGURADO" };
+        db.Usuarios.Add(otroEncargado);
+        await db.SaveChangesAsync();
+        try
+        {
+            var agendaEncargado = new ReservaService(new ReservaRepository(db));
+            var historialOtro = await agendaEncargado.ListarAsync(otroEncargado.UsuarioId, default, cliente.NombreCompleto, otraCita.Fecha);
+            Verificar(historialOtro?.Sucursal == otraSucursal.Nombre && historialOtro.Reservas.Single().CitaId == otraCita.CitaId &&
+                await agendaEncargado.ObtenerAsync(citaId, otroEncargado.UsuarioId) is null &&
+                await agendaEncargado.ObtenerAsync(otraCita.CitaId, encargado.UsuarioId) is null,
+                "Dos encargados consultan únicamente sus citas y sus sucursales");
+            var ajena = Solicitud(18);
+            Verificar(!(await Crear(ajena, otroEncargado.UsuarioId)).Exito, "Un segundo encargado no puede guardar en la sucursal ajena");
+        }
+        finally
+        {
+            otroEncargado.Activo = false;
+            await db.SaveChangesAsync();
+        }
         Verificar(await Completar(otraCita.CitaId, admin.UsuarioId), "Administrador finaliza dentro de su alcance global");
         var repo = new FacturaRepository(db);
         Verificar(await repo.ObtenerAsync((await Documento(otraCita.CitaId)).FacturaId, default, encargado.UsuarioId) is null,

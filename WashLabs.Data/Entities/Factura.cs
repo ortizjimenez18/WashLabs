@@ -26,6 +26,11 @@ public partial class Factura
     public decimal Impuesto { get; set; }
 
     public decimal Total { get; set; }
+    public decimal? TipoCambioVenta { get; set; }
+    public DateOnly? FechaTipoCambioVenta { get; set; }
+    public int? EmitidaPorUsuarioId { get; set; }
+    public Guid? SolicitudEmisionId { get; set; }
+    public virtual Usuario? EmitidaPorUsuario { get; set; }
 
     public string? RutaPdf { get; set; }
 

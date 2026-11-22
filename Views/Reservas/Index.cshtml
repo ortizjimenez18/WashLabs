@@ -3,7 +3,16 @@
 <section class="shell page-heading"><p class="eyebrow">WASHLABS / RESERVAS</p><h1>Reservas</h1><p class="lede">@(Model.EsCliente ? "Historial de tus reservas." : User.IsInRole("Administrador") ? "Historial de reservas de todas las sucursales." : "Historial de reservas de tu sucursal.")</p></section>
 <section class="shell history-section" aria-label="Historial de reservas">
     <div class="reservation-actions"><a class="button" asp-action="Crear">Nueva reserva</a></div>
-    @if (!Model.EsCliente) { <div class="context-bar"><span><strong>Sucursal:</strong> @Model.Sucursal</span><span><strong>Usuario:</strong> @Model.Encargado</span></div> }
+    @if (!Model.EsCliente)
+    {
+        <div class="context-bar"><span><strong>Sucursal:</strong> @Model.Sucursal</span><span><strong>Encargado:</strong> @Model.Encargado</span></div>
+        <form method="get" asp-action="Index" class="filters">
+            <div><label for="cliente">Cliente</label><input name="cliente" id="cliente" type="search" value="@Model.ClienteFiltro" /></div>
+            <div><label for="fecha">Fecha</label><input name="fecha" id="fecha" type="date" value="@Model.FechaFiltro?.ToString("yyyy-MM-dd")" /></div>
+            <button class="button" type="submit">Filtrar</button>
+            <a asp-action="Index" class="text-link">Limpiar filtros</a>
+        </form>
+    }
     @if (Model.Reservas.Count == 0)
     {
         <div class="empty-state"><h2>No hay reservas registradas.</h2><p>Las reservas disponibles para tu usuario aparecerán aquí.</p></div>

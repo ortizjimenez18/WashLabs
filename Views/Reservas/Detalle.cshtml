@@ -10,6 +10,7 @@
             <div><h2>Sucursal y servicio</h2><p><span class="meta-label">Sucursal</span> @Model.Sucursal</p><p><span class="meta-label">Servicio</span> @Model.Servicio</p></div>
         </div>
         <h2 class="subheading">Información para el servicio</h2>
+        <p><span class="meta-label">Cliente</span> @Model.Cliente · @Model.CorreoCliente</p>
         <p><span class="meta-label">Matrícula del vehículo</span> @Model.Matricula</p>
         @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
         {
@@ -22,20 +23,33 @@
             @foreach (var respuesta in Model.Respuestas) { <div><dt>@respuesta.Pregunta</dt><dd>@respuesta.Respuesta</dd></div> }
         </dl>
         @if (Model.Respuestas.Count == 0) { <p class="muted">Esta reserva no tiene respuestas registradas.</p> }
+        @if (!string.IsNullOrWhiteSpace(Model.Observaciones)) { <p><span class="meta-label">Observaciones</span> @Model.Observaciones</p> }
     </div>
-    <div class="detail-actions"><a class="button" asp-action="Index"> Volver al historial</a><a class="button" asp-controller="Facturacion" asp-action="Index">Consultar facturación</a></div>
-    @if (Model.FacturaId.HasValue)
-    {
-        <p><a asp-controller="Facturacion" asp-action="Detalle" asp-route-id="@Model.FacturaId">Ver documento #@Model.FacturaId</a></p>
-    }
-    @if (Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
-    {
-        <form method="post" asp-action="Cancelar" asp-route-id="@Model.CitaId" class="completion-form"><button class="button" type="submit">Cancelar reserva</button></form>
-    }
-    @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
-    {
-        <form method="post" asp-action="Completar" asp-route-id="@Model.CitaId" class="completion-form">
-            <button class="button" type="submit">Completar servicio</button>
-        </form>
-    }
+    <div class="detail-actions reservation-detail-actions">
+        <a class="button" asp-action="Index">Volver al historial</a>
+        <a class="button" asp-controller="Facturacion" asp-action="Index">Consultar facturación</a>
+        @if (Model.FacturaId.HasValue)
+        {
+            <a class="text-link" asp-controller="Facturacion" asp-action="Detalle" asp-route-id="@Model.FacturaId">Ver documento #@Model.FacturaId</a>
+        }
+        @if (User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Reprogramada")
+            && Model.Fecha.ToDateTime(Model.HoraInicio) > WashLabs.Models.DTOs.DisponibilidadReserva.Ahora)
+        {
+            <form method="post" asp-action="Confirmar" asp-route-id="@Model.CitaId">
+                <button class="button" type="submit">Confirmar cita</button>
+            </form>
+        }
+        @if (Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
+        {
+            <form method="post" asp-action="Cancelar" asp-route-id="@Model.CitaId">
+                <button class="button" type="submit">Cancelar reserva</button>
+            </form>
+        }
+        @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
+        {
+            <form method="post" asp-action="Completar" asp-route-id="@Model.CitaId">
+                <button class="button" type="submit">Completar servicio</button>
+            </form>
+        }
+    </div>
 </section>

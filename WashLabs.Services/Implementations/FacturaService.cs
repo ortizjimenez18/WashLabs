@@ -8,6 +8,8 @@ namespace WashLabs.Services.Implementations;
 
 public sealed class FacturaService(IFacturaRepository repository) : IFacturaService
 {
+    public Task<long?> EmitirAsync(EmitirFacturaDTO solicitud, int usuarioId, TipoCambioVentaDTO? tasa, CancellationToken ct) =>
+        repository.EmitirAsync(solicitud, usuarioId, tasa, ct);
     public Task<HistorialFacturacionDTO> OpcionesAsync(int usuarioId, CancellationToken ct) => repository.OpcionesAsync(usuarioId, ct);
     public Task<HistorialFacturacionDTO> ConsultarAsync(FiltroFacturacionDTO filtro, int usuarioId, CancellationToken ct)
     {
@@ -20,6 +22,8 @@ public sealed class FacturaService(IFacturaRepository repository) : IFacturaServ
         repository.QuitarProductoAsync(id, detalleId, usuarioId, ct);
     public Task<bool> AgregarProductoAsync(long id, int productoId, decimal cantidad, int usuarioId, CancellationToken ct) =>
         repository.AgregarProductoAsync(id, productoId, cantidad, usuarioId, ct);
+    public Task<bool> AgregarServicioAsync(long id, int servicioId, decimal cantidad, int usuarioId, CancellationToken ct) =>
+        repository.AgregarServicioAsync(id, servicioId, cantidad, usuarioId, ct);
     public async Task<IReadOnlyList<FacturaResumenDTO>> ListarAsync(CancellationToken cancellationToken, int usuarioId) =>
         (await repository.ListarAsync(cancellationToken, usuarioId)).Select(FacturaMapper.ToResumenDTO).ToArray();
 

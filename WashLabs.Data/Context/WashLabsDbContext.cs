@@ -322,7 +322,12 @@ public partial class WashLabsDbContext : DbContext
 
         modelBuilder.Entity<Factura>(entity =>
         {
-            entity.ToTable("Facturas", "dbo");
+            entity.Property(e => e.TipoCambioVenta).HasPrecision(18, 6);
+            entity.HasOne(e => e.EmitidaPorUsuario).WithMany().HasForeignKey(e => e.EmitidaPorUsuarioId)
+                .HasConstraintName("FK_Facturas_EmitidaPor");
+            entity.ToTable("Facturas", "dbo", tabla => tabla.HasCheckConstraint("CK_Facturas_TipoCambioVenta",
+                "([TipoCambioVenta] IS NULL AND [FechaTipoCambioVenta] IS NULL) OR " +
+                "([TipoCambioVenta] IS NOT NULL AND [TipoCambioVenta] > 0 AND [FechaTipoCambioVenta] IS NOT NULL)"));
             entity.HasKey(e => e.FacturaId).HasName("PK_Facturas");
 
             entity.HasIndex(e => new { e.ClienteId, e.Fecha, e.EstadoFacturaId }, "IX_Facturas_ClienteFecha").IsDescending(false, true, false);
@@ -332,6 +337,8 @@ public partial class WashLabsDbContext : DbContext
             entity.HasIndex(e => e.CitaId, "UX_Facturas_Cita")
                 .IsUnique()
                 .HasFilter("([CitaId] IS NOT NULL)");
+            entity.HasIndex(e => new { e.EmitidaPorUsuarioId, e.SolicitudEmisionId }, "UX_Facturas_SolicitudEmision")
+                .IsUnique().HasFilter("([SolicitudEmisionId] IS NOT NULL)");
 
             entity.Property(e => e.EstadoFacturaId).HasDefaultValue((byte)1);
             entity.Property(e => e.Fecha)
