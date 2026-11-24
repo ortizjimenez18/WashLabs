@@ -10,6 +10,7 @@ public interface IOperacionRepository
     Task<Vehiculo?> VehiculoAsync(int id, int? clienteId, CancellationToken ct);
     Task<string?> EditarVehiculoAsync(Vehiculo vehiculo, int? clienteId, CancellationToken ct);
     Task<ConfiguracionWashPoints?> ConfiguracionPuntosAsync(CancellationToken ct);
+    Task<IReadOnlyList<int>> VehiculosConCanjeReservadoAsync(int? clienteId, CancellationToken ct);
     Task<IReadOnlyList<CategoriaAsistente>> CategoriasAsistenteAsync(CancellationToken ct);
     Task<PreguntaAsistente?> PreguntaAsync(int id, CancellationToken ct);
     Task<bool> CompletarCitaAsync(long id, int encargadoId, CancellationToken ct, WashLabs.Models.DTOs.TipoCambioVentaDTO? tipoCambio = null);

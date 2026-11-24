@@ -23,5 +23,6 @@ public static partial class ReservaMapper
         cita.RespuestasReserva.OrderBy(r => r.PreguntaReserva.Orden).ThenBy(r => r.PreguntaReservaId)
             .Select(r => new RespuestaReservaDTO(r.PreguntaReserva.Pregunta, r.Respuesta)).ToArray(),
         cita.Vehiculo.Matricula, cita.ClienteId, cita.Facturas?.FacturaId,
-        cita.Cliente?.NombreCompleto, cita.Cliente?.Correo, cita.Observaciones);
+        cita.Cliente?.NombreCompleto, cita.Cliente?.Correo, cita.Observaciones,
+        cita.Facturas?.Observaciones == CanjeWashPoints.Concepto);
 }

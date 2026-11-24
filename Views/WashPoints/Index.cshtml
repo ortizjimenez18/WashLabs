@@ -15,7 +15,18 @@
                 <div class="wash-stamps" role="img" aria-label="@puntos.Lavados de @puntos.Meta lavados">
                 @for (var i = 1; i <= puntos.Meta; i++) { <span class="wash-stamp @(i <= puntos.Lavados ? "earned" : "")" aria-hidden="true">@(i <= puntos.Lavados ? "✓" : "")</span> }
                 </div>
-                <p class="loyalty-remaining">@(faltantes > 0 ? $"Faltan {faltantes} lavados para obtener la recompensa." : "Has alcanzado la meta de lavados.")</p>
+                @if (puntos.CanjeReservado)
+                {
+                    <p class="loyalty-remaining">Tienes un Wash Express reservado con WashPoints. Los lavados se descuentan al emitir la factura.</p>
+                }
+                else if (puntos.RecompensaDisponible)
+                {
+                    <p class="loyalty-remaining">Tienes un Wash Express gratis. El descuento se aplica al reservar ese servicio para esta matrícula.</p>
+                }
+                else if (faltantes > 0)
+                {
+                    <p class="loyalty-remaining">Faltan @faltantes lavados para obtener un Wash Express gratis.</p>
+                }
                 <details><summary>Registro de lavados</summary>
                 @if (puntos.Movimientos.Count == 0) { <p class="muted">Este vehículo aún no tiene lavados completados.</p> }
                 else { <ul class="wash-history">@foreach (var movimiento in puntos.Movimientos) { <li><time datetime="@movimiento.Fecha.ToString("s")">@movimiento.Fecha.ToString("MM/dd/yyyy HH:mm")</time><span>Cita #@movimiento.CitaId</span><strong>+@movimiento.Cantidad</strong></li> }</ul> }

@@ -123,7 +123,9 @@ public sealed class FacturacionController(IFacturaService facturas, IProductoSer
         if (factura?.CitaId is null) return NotFound();
         TempData["Mensaje"] = await operaciones.CompletarCitaAsync(factura.CitaId.Value, UsuarioId, ct,
             factura.TipoDocumento == "PROFORMA" ? await hacienda.ParaEmitirAsync(cotizacion, UsuarioId, $"proforma-{id}", ct) : null)
-            ? "Cita completada. Factura emitida y lavado acreditado en WashPoints."
+            ? factura.TieneCanjeWashPoints
+                ? "Cita completada. Factura emitida con el descuento WashPoints."
+                : "Cita completada. Factura emitida y lavado acreditado en WashPoints."
             : "No se pudo completar la cita. Revisa el estado y los permisos de la orden.";
         return RedirectToAction(nameof(Detalle), new { id, volverUrl = VolverSeguro(volverUrl) });
     }

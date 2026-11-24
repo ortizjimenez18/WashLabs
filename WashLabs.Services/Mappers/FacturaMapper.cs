@@ -25,5 +25,6 @@ public static class FacturaMapper
         MontoPagado: factura.PagosFactura.Sum(p => p.Monto), CorreoCliente: factura.Cliente.Correo,
         TipoCambio: factura.TipoCambioVenta is > 0 && factura.FechaTipoCambioVenta is { } dia
             ? new TipoCambioVentaDTO(factura.TipoCambioVenta.Value, dia) : null,
-        Encargado: factura.EmitidaPorUsuario?.NombreCompleto);
+        Encargado: factura.EmitidaPorUsuario?.NombreCompleto,
+        TieneCanjeWashPoints: factura.Observaciones == CanjeWashPoints.Concepto);
 }

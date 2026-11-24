@@ -115,6 +115,16 @@ public sealed class ReservaRepository(WashLabsDbContext context) : IReservaRepos
                 s.SucursalId == solicitud.SucursalId && s.ServicioId == solicitud.ServicioId && s.Activo && s.Servicio.Activo, ct);
             var precio = tarifa.PrecioSucursal ?? tarifa.Servicio.TarifaBase;
             if (precio < 0) return new(false, null, "El servicio no tiene un precio válido.");
+            var canje = false;
+            if (precio > 0 && CanjeWashPoints.EsWashExpress(tarifa.Servicio.Nombre))
+            {
+                var operacion = new OperacionRepository(context);
+                var configuracion = await operacion.ConfiguracionPuntosAsync(ct);
+                canje = configuracion is not null && await context.TarjetasWashPoints.AnyAsync(t =>
+                    t.VehiculoId == solicitud.VehiculoId && t.LavadosAcumulados >= configuracion.MetaLavados, ct)
+                    && !await OperacionRepository.CitasConCanjeReservado(context)
+                        .AnyAsync(c => c.VehiculoId == solicitud.VehiculoId, ct);
+            }
             var descripcion = string.IsNullOrWhiteSpace(tarifa.Servicio.Descripcion) ? tarifa.Servicio.Nombre
                 : tarifa.Servicio.Nombre + ": " + tarifa.Servicio.Descripcion;
             var estadoProforma = await context.EstadosFactura.Where(e => e.Nombre == "Proforma")
@@ -130,9 +140,10 @@ public sealed class ReservaRepository(WashLabsDbContext context) : IReservaRepos
             await context.SaveChangesAsync(ct);
             var proforma = new Factura { CitaId = cita.CitaId, ClienteId = cita.ClienteId,
                 SucursalId = cita.SucursalId, EstadoFacturaId = estadoProforma, TipoDocumento = "PROFORMA", Origen = "CITA",
+                Observaciones = canje ? CanjeWashPoints.Concepto : null,
                 DetallesFactura = [new DetalleFactura { TipoLinea = "S", ServicioId = cita.ServicioId,
                     Descripcion = descripcion.Length > 300 ? descripcion[..300] : descripcion,
-                    Cantidad = 1m, PrecioUnitario = precio, PorcentajeImpuesto = 13m }] };
+                    Cantidad = 1m, PrecioUnitario = precio, Descuento = canje ? precio : 0m, PorcentajeImpuesto = 13m }] };
             context.Facturas.Add(proforma);
             await context.SaveChangesAsync(ct);
             await FacturaRepository.ActualizarTotalesAsync(context, proforma, ct);

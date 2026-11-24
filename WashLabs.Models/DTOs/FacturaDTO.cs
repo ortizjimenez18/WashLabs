@@ -9,4 +9,5 @@ public sealed record FacturaDTO(long FacturaId, DateTime Fecha, int ClienteId, s
     SucursalDTO Sucursal, string Estado, IReadOnlyList<FacturaLineaDTO> Lineas,
     decimal Subtotal, IReadOnlyList<ImpuestoFacturaDTO> Impuestos, decimal Total, string? IdentificacionCliente,
     string TipoDocumento = "FACTURA", long? CitaId = null, bool PermiteProductos = false, string? NombreNegocio = null, decimal MontoPagado = 0m,
-    string? CorreoCliente = null, TipoCambioVentaDTO? TipoCambio = null, string? Encargado = null);
+    string? CorreoCliente = null, TipoCambioVentaDTO? TipoCambio = null, string? Encargado = null,
+    bool TieneCanjeWashPoints = false);

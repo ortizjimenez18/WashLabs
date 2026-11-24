@@ -8,5 +8,6 @@ public sealed class CrearReservaViewModel
     [ValidateNever] public FormularioReservaDTO? Formulario { get; set; }
     [ValidateNever] public IReadOnlyList<ClienteOpcionDTO> Clientes { get; set; } = [];
     [ValidateNever] public IReadOnlyList<VehiculoDTO> Vehiculos { get; set; } = [];
+    [ValidateNever] public IReadOnlySet<int> VehiculosConCanje { get; set; } = new HashSet<int>();
     [ValidateNever] public IReadOnlyList<TimeOnly> Horarios { get; set; } = [];
 }

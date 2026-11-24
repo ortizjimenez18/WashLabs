@@ -12,7 +12,16 @@
         <h2 class="subheading">Información para el servicio</h2>
         <p><span class="meta-label">Cliente</span> @Model.Cliente · @Model.CorreoCliente</p>
         <p><span class="meta-label">Matrícula del vehículo</span> @Model.Matricula</p>
-        @if (!User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
+        @if (Model.TieneCanjeWashPoints)
+        {
+            <p class="notice">@(Model.Estado.Nombre switch
+            {
+                "Completada" => "WashPoints aplicado. La factura incluye el descuento del Wash Express.",
+                "Cancelada" or "No asistió" => "El canje de WashPoints quedó disponible para otra reserva.",
+                _ => "Wash Express reservado con WashPoints. Tu proforma incluye el descuento del 100 % del lavado."
+            })</p>
+        }
+        @if (!Model.TieneCanjeWashPoints && !User.IsInRole("Cliente") && Model.Estado.Nombre is ("Pendiente" or "Confirmada" or "Reprogramada"))
         {
             <form method="post" asp-action="AsignarVehiculo" asp-route-id="@Model.CitaId" class="vehicle-assignment">
                 <div><label for="vehiculoId">Vehículo del cliente</label><select id="vehiculoId" name="vehiculoId" required>@foreach (var vehiculo in vehiculos) { <option value="@vehiculo.VehiculoId" selected="@(vehiculo.Matricula == Model.Matricula)">@vehiculo.Matricula · @vehiculo.Marca @vehiculo.Modelo</option> }</select></div>

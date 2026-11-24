@@ -23,7 +23,9 @@ public sealed class ReservasController(IReservaService reservas, IOperacionServi
         model.Reserva.SucursalId = model.Formulario.SucursalId;
         model.Clientes = await operaciones.ClientesAsync(ct);
         if (User.IsInRole("Cliente")) model.Clientes = model.Clientes.Where(c => c.ClienteId == User.Id()).ToArray();
-        model.Vehiculos = await operaciones.VehiculosAsync(ct, User.IsInRole("Cliente") ? User.Id() : null);
+        var tarjetas = await operaciones.WashPointsAsync(ct, User.IsInRole("Cliente") ? User.Id() : null);
+        model.Vehiculos = tarjetas.Select(t => t.Vehiculo).ToArray();
+        model.VehiculosConCanje = tarjetas.Where(t => t.RecompensaDisponible).Select(t => t.Vehiculo.VehiculoId).ToHashSet();
         if (model.Reserva.Fecha.HasValue && model.Reserva.ServicioId > 0)
             model.Horarios = await reservas.HorariosAsync(EncargadoUsuarioId, model.Reserva.ServicioId, model.Reserva.Fecha.Value, ct, model.Reserva.SucursalId);
         return true;
@@ -100,7 +102,7 @@ public sealed class ReservasController(IReservaService reservas, IOperacionServi
             TempData["Mensaje"] = "No se pudo completar el servicio. Revisa el estado, el vehículo y los permisos; si otra operación está en curso, intenta nuevamente.";
             return RedirectToAction(nameof(Detalle), new { id });
         }
-        TempData["Mensaje"] = "Servicio completado: factura emitida y lavado acreditado en WashPoints.";
+        TempData["Mensaje"] = "Servicio completado y factura emitida.";
         return RedirectToAction(nameof(Detalle), new { id });
     }
 

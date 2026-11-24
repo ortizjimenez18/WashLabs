@@ -61,6 +61,16 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
         context.ConfiguracionWashPoints.AsNoTracking().Where(c => c.Activa)
             .OrderBy(c => c.ConfiguracionWashPointsId).FirstOrDefaultAsync(ct);
 
+    internal static IQueryable<Cita> CitasConCanjeReservado(WashLabsDbContext db) =>
+        db.Citas.Where(c => c.Facturas != null && c.Facturas.TipoDocumento == "PROFORMA"
+            && c.Facturas.Observaciones == CanjeWashPoints.Concepto
+            && (c.EstadoCita.Nombre == "Pendiente" || c.EstadoCita.Nombre == "Confirmada"
+                || c.EstadoCita.Nombre == "Reprogramada"));
+
+    public async Task<IReadOnlyList<int>> VehiculosConCanjeReservadoAsync(int? clienteId, CancellationToken ct) =>
+        await CitasConCanjeReservado(context).Where(c => !clienteId.HasValue || c.ClienteId == clienteId.Value)
+            .Select(c => c.VehiculoId).Distinct().ToListAsync(ct);
+
     public async Task<IReadOnlyList<CategoriaAsistente>> CategoriasAsistenteAsync(CancellationToken ct) =>
         await context.CategoriasAsistente.AsNoTracking().Where(c => c.Activa)
             .Include(c => c.PreguntasAsistente.Where(p => p.Activa && p.EsInicial))
@@ -99,14 +109,16 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
                 await transaction.RollbackAsync(ct);
                 return false;
             }
-            factura.EstadoFacturaId = await context.EstadosFactura.Where(e => e.Nombre == "Pendiente")
+            var canje = factura.Observaciones == CanjeWashPoints.Concepto;
+            await FacturaRepository.ActualizarTotalesAsync(context, factura, ct);
+            var estadoFactura = canje && factura.Total == 0m ? "Completada" : "Pendiente";
+            factura.EstadoFacturaId = await context.EstadosFactura.Where(e => e.Nombre == estadoFactura)
                 .Select(e => e.EstadoFacturaId).SingleAsync(ct);
             factura.TipoDocumento = "FACTURA";
             factura.Fecha = DisponibilidadReserva.Ahora;
             factura.EmitidaPorUsuarioId = encargadoId;
             factura.TipoCambioVenta = tipoCambio?.Valor;
             factura.FechaTipoCambioVenta = tipoCambio?.Fecha;
-            await FacturaRepository.ActualizarTotalesAsync(context, factura, ct);
             if (!await context.MovimientosWashPoints.AnyAsync(m => m.CitaId == id && m.TipoMovimiento == "ACUMULA", ct))
             {
                 // UPDATE toma un bloqueo exclusivo incluso si la tarjeta todavía no existe.
@@ -118,11 +130,22 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
                     tarjeta = new TarjetaWashPoints { VehiculoId = cita.VehiculoId, CicloActual = 1 };
                     context.TarjetasWashPoints.Add(tarjeta);
                 }
-                tarjeta.LavadosAcumulados = checked(tarjeta.LavadosAcumulados + 1);
+                var configuracion = await ConfiguracionPuntosAsync(ct);
+                if (canje)
+                {
+                    var meta = configuracion?.MetaLavados ?? 10;
+                    tarjeta.LavadosAcumulados = Math.Max(0, tarjeta.LavadosAcumulados - meta);
+                    tarjeta.CicloActual = checked(tarjeta.CicloActual + 1);
+                }
+                else
+                {
+                    tarjeta.LavadosAcumulados = checked(tarjeta.LavadosAcumulados + 1);
+                    context.MovimientosWashPoints.Add(new MovimientoWashPoints {
+                        TarjetaWashPoints = tarjeta, CitaId = id, TipoMovimiento = "ACUMULA", Cantidad = 1,
+                        Ciclo = tarjeta.CicloActual, Descripcion = "Lavado por cita completada" });
+                }
+                tarjeta.RecompensaDisponible = configuracion is not null && tarjeta.LavadosAcumulados >= configuracion.MetaLavados;
                 tarjeta.FechaActualizacion = DateTime.Now;
-                context.MovimientosWashPoints.Add(new MovimientoWashPoints {
-                    TarjetaWashPoints = tarjeta, CitaId = id, TipoMovimiento = "ACUMULA", Cantidad = 1,
-                    Ciclo = tarjeta.CicloActual, Descripcion = "Lavado por cita completada" });
             }
             await context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -145,6 +168,7 @@ public sealed class OperacionRepository(WashLabsDbContext context) : IOperacionR
     public async Task<bool> AsignarVehiculoAsync(long citaId, int vehiculoId, int encargadoId, CancellationToken ct)
     {
         var cambiadas = await context.Citas.Where(c => c.CitaId == citaId && c.Cliente.Activo
+            && (c.VehiculoId == vehiculoId || c.Facturas == null || c.Facturas.Observaciones != CanjeWashPoints.Concepto)
             && (c.EstadoCita.Nombre == "Pendiente" || c.EstadoCita.Nombre == "Confirmada" || c.EstadoCita.Nombre == "Reprogramada")
             && context.Usuarios.Any(u => u.UsuarioId == encargadoId && u.Activo && (u.Rol.Nombre == "Administrador"
                 || u.Rol.Nombre == "Encargado" && u.Sucursal != null && u.Sucursal.Activa && u.SucursalId == c.SucursalId))

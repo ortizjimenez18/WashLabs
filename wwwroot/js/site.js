@@ -251,10 +251,19 @@
     }
     function serviceDetails() {
         const option = service.selectedOptions[0];
+        const available = vehicle.selectedOptions[0]?.dataset.canjeDisponible === 'si';
+        const applies = available && option?.dataset.canjeAplicable === 'si';
         const duration = form.querySelector('[data-booking-duration]');
         const price = form.querySelector('[data-booking-price]');
+        const washPoints = form.querySelector('[data-booking-washpoints]');
         if (duration) duration.textContent = option?.dataset.duration ? `${option.dataset.duration} min` : '';
-        if (price) price.textContent = option?.dataset.price || '';
+        if (price) price.textContent = applies ? '₡ 0' : option?.dataset.price || '';
+        if (washPoints) {
+            washPoints.hidden = !available;
+            washPoints.textContent = applies
+                ? 'WashPoints cubre el 100 % de este Wash Express. El canje se confirma al emitir la factura.'
+                : 'Esta matrícula tiene un Wash Express gratis. Selecciona Wash Express para usar la recompensa.';
+        }
     }
     function vehicles() {
         const current = vehicle.value;
@@ -305,7 +314,8 @@
             if (current === version) status.textContent = 'No se pudieron consultar los horarios. Cambia la fecha para intentar nuevamente.';
         } finally { clearTimeout(timeout); }
     }
-    client.addEventListener('change', () => { vehicles(); clientDetails(); });
+    client.addEventListener('change', () => { vehicles(); clientDetails(); serviceDetails(); });
+    vehicle.addEventListener('change', serviceDetails);
     service.addEventListener('change', () => { serviceDetails(); availability(); });
     date.addEventListener('change', () => availability());
     time.addEventListener('change', highlightTime);

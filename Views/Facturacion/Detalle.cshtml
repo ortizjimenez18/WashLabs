@@ -24,6 +24,10 @@
             <div class="billing-company"><div class="billing-logo"><img src="~/images/marca/washlabs.png" asp-append-version="true" alt="WashLabs" width="1672" height="941" /></div><strong>@(factura.NombreNegocio ?? "WashLabs")</strong><span>@factura.Sucursal.Nombre</span></div>
             <div class="billing-invoice-number"><p class="eyebrow">@factura.TipoDocumento</p><h2>#@factura.FacturaId</h2><partial name="_EstadoFactura" model="factura.Estado" /><p>Emisión: @factura.Fecha.ToString("MM/dd/yyyy HH:mm")</p></div>
         </header>
+        @if (factura.TieneCanjeWashPoints)
+        {
+            <p class="notice">WashPoints · @(factura.Estado == "Anulada" ? "Canje liberado" : "100 % de descuento en el Wash Express")</p>
+        }
         <div class="billing-invoice-meta">
             <section><h3>Facturado a</h3><strong>@factura.Cliente</strong><p>@factura.CorreoCliente</p><p>Identificación: @(factura.IdentificacionCliente ?? "No registrada")</p>
                 @if (factura.CitaId.HasValue) { <p class="billing-reservation-reference"><a asp-controller="Reservas" asp-action="Detalle" asp-route-id="@factura.CitaId">Reserva #@factura.CitaId</a></p> }

@@ -9,4 +9,4 @@ public sealed record RespuestaReservaDTO(string Pregunta, string Respuesta);
 public sealed record ReservaDTO(long CitaId, DateTime FechaCreacion, DateOnly Fecha,
     TimeOnly HoraInicio, TimeOnly HoraFin, string Sucursal, string Servicio,
     EstadoReservaDTO Estado, IReadOnlyList<RespuestaReservaDTO> Respuestas, string Matricula, int ClienteId, long? FacturaId = null,
-    string? Cliente = null, string? CorreoCliente = null, string? Observaciones = null);
+    string? Cliente = null, string? CorreoCliente = null, string? Observaciones = null, bool TieneCanjeWashPoints = false);

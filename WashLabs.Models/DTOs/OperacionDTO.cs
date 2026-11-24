@@ -25,7 +25,7 @@ public sealed class RegistroVehiculoDTO
 public sealed record RegistroVehiculoResultadoDTO(bool Exito, string? Error);
 public sealed record MovimientoLavadoDTO(long CitaId, DateTime Fecha, string Descripcion, int Cantidad);
 public sealed record WashPointsVehiculoDTO(VehiculoDTO Vehiculo, int Lavados, int Meta, string Recompensa,
-    bool RecompensaDisponible, IReadOnlyList<MovimientoLavadoDTO> Movimientos);
+    bool RecompensaDisponible, IReadOnlyList<MovimientoLavadoDTO> Movimientos, bool CanjeReservado = false);
 public sealed record CategoriaAsistenteDTO(int CategoriaId, string Nombre, string? Descripcion, int? PreguntaInicialId);
 public sealed record OpcionAsistenteDTO(int OpcionId, string Texto, string? Respuesta, int? SiguientePreguntaId);
 public sealed record PreguntaAsistenteDTO(int PreguntaId, string Categoria, string Pregunta,

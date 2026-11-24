@@ -45,14 +45,17 @@ public sealed class OperacionService(IOperacionRepository repository) : IOperaci
 
     public async Task<IReadOnlyList<WashPointsVehiculoDTO>> WashPointsAsync(CancellationToken ct = default, int? clienteId = null)
     {
-        var config = await repository.ConfiguracionPuntosAsync(ct)
-            ?? throw new InvalidOperationException("No hay configuración activa de WashPoints.");
+        var config = await repository.ConfiguracionPuntosAsync(ct);
         var vehiculos = await repository.VehiculosAsync(ct, clienteId);
+        var reservados = (await repository.VehiculosConCanjeReservadoAsync(clienteId, ct)).ToHashSet();
         return vehiculos.Select(v => new WashPointsVehiculoDTO(Map(v), v.TarjetasWashPoints?.LavadosAcumulados ?? 0,
-            config.MetaLavados, config.DescripcionRecompensa, v.TarjetasWashPoints?.RecompensaDisponible ?? false,
+            config?.MetaLavados ?? 10, config?.DescripcionRecompensa ?? CanjeWashPoints.Servicio,
+            config is not null && v.TarjetasWashPoints?.LavadosAcumulados >= config.MetaLavados
+                && !reservados.Contains(v.VehiculoId),
             (v.TarjetasWashPoints?.MovimientosWashPoints ?? []).Where(m => m.TipoMovimiento == "ACUMULA" && m.CitaId.HasValue)
                 .OrderByDescending(m => m.Fecha).ThenByDescending(m => m.MovimientoWashPointsId)
-                .Select(m => new MovimientoLavadoDTO(m.CitaId!.Value, m.Fecha, m.Descripcion, m.Cantidad)).ToArray())).ToArray();
+                .Select(m => new MovimientoLavadoDTO(m.CitaId!.Value, m.Fecha, m.Descripcion, m.Cantidad)).ToArray(),
+            reservados.Contains(v.VehiculoId))).ToArray();
     }
     public async Task<IReadOnlyList<CategoriaAsistenteDTO>> CategoriasAsistenteAsync(CancellationToken ct = default) =>
         (await repository.CategoriasAsistenteAsync(ct)).Select(c => new CategoriaAsistenteDTO(c.CategoriaAsistenteId,

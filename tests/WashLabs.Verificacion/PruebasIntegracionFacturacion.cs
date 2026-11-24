@@ -194,6 +194,48 @@ internal static class PruebasIntegracionFacturacion
             && mixtaFinal.Subtotal == mixtaFinal.DetallesFactura.Sum(d => d.Subtotal ?? 0m)
             && mixtaFinal.Total == mixtaFinal.DetallesFactura.Sum(d => d.Total ?? 0m) && await Movimientos(mixtaConcurrente.CitaId.Value) == 1,
             "Incluir producto y finalizar simultáneamente conserva líneas y totales");
+
+        var express = await db.Servicios.FirstOrDefaultAsync(s => s.Nombre == CanjeWashPoints.Servicio)
+            ?? new Servicio { Nombre = CanjeWashPoints.Servicio, Descripcion = "Prueba de canje", TarifaBase = 1000m,
+                DuracionMinutos = 30, TipoLavado = "EXTERIOR", NivelDetalle = "BASICO", Activo = true };
+        if (express.ServicioId == 0 || !await db.SucursalServicios.AnyAsync(s =>
+                s.SucursalId == tarifa.SucursalId && s.ServicioId == express.ServicioId))
+            db.SucursalServicios.Add(new SucursalServicio { SucursalId = tarifa.SucursalId, Servicio = express,
+                PrecioSucursal = 1000m, Activo = true });
+        var tarjeta = await db.TarjetasWashPoints.SingleAsync(t => t.VehiculoId == vehiculo.VehiculoId);
+        tarjeta.LavadosAcumulados = 9;
+        await db.SaveChangesAsync();
+        async Task<WashPointsVehiculoDTO> Tarjeta() =>
+            (await new OperacionService(new OperacionRepository(db)).WashPointsAsync(default, cliente.UsuarioId))
+                .Single(t => t.Vehiculo.VehiculoId == vehiculo.VehiculoId);
+        async Task<long> ReservarExpress(int dia)
+        {
+            var expressSolicitud = Solicitud(dia);
+            expressSolicitud.ServicioId = express.ServicioId;
+            var resultado = await Crear(expressSolicitud);
+            return resultado.CitaId ?? throw new InvalidOperationException(resultado.Error);
+        }
+        var noveno = await ReservarExpress(11);
+        Verificar((await Documento(noveno)).DetallesFactura.Single().Descuento == 0m && await Completar(noveno)
+            && (await Tarjeta()).RecompensaDisponible, "Con nueve lavados el Wash Express se cobra y acredita el décimo");
+        var canjeCancelado = await ReservarExpress(12);
+        var proformaCanje = await Documento(canjeCancelado);
+        Verificar(proformaCanje.Observaciones == CanjeWashPoints.Concepto && proformaCanje.Total == 0m
+            && (await Tarjeta()) is { CanjeReservado: true, Lavados: 10 }, "La proforma reserva el descuento sin consumir los lavados");
+        var segundaExpress = await ReservarExpress(13);
+        Verificar((await Documento(segundaExpress)).DetallesFactura.Single().Descuento == 0m,
+            "Un canje pendiente no se duplica en otra proforma");
+        await using (var ctx = Contexto())
+            Verificar(await new OperacionRepository(ctx).CancelarCitaAsync(canjeCancelado, cliente.UsuarioId, default)
+                && (await Tarjeta()).RecompensaDisponible, "Cancelar libera la recompensa");
+        var canje = await ReservarExpress(14);
+        Verificar(await Completar(canje) && await Completar(canje) && await Movimientos(canje) == 0
+            && (await Tarjeta()) is { Lavados: 0, CanjeReservado: false }, "Facturar consume el canje una sola vez");
+        var facturaCanje = await Documento(canje);
+        Verificar(facturaCanje.TipoDocumento == "FACTURA" && facturaCanje.EstadoFactura.Nombre == "Completada"
+            && facturaCanje.Total == 0m && facturaCanje.DetallesFactura.Single() is { Descuento: > 0m, Impuesto: 0m },
+            "El 100 % de descuento se conserva con IVA cero en la factura");
+
         var otraSucursal = new Sucursal { Nombre = "TST otra sucursal " + marca, Descripcion = "Prueba", Telefono = "00000000",
             Correo = "tst" + marca + "@example.invalid", Direccion = "Prueba", Activa = true };
         db.Sucursales.Add(otraSucursal);
